@@ -1,41 +1,62 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+// Import các thư viện cần thiết
+const express = require("express");
+const cookieParser = require("cookie-parser");
+const logger = require("morgan");
+const cors = require("cors"); // Thêm CORS
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+// Import các file routes
+const indexRouter = require("./routes/index");
+const usersRouter = require("./routes/users");
+// Thêm các routes khác của bạn ở đây, ví dụ: const productsRouter = require('./routes/products');
 
-var app = express();
+const app = express();
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+// --- Cấu hình Middleware ---
 
-app.use(logger('dev'));
+// Cho phép các request từ các domain khác (quan trọng cho React frontend)
+app.use(cors());
+
+// Ghi log các request ra console (ở chế độ dev)
+app.use(logger("dev"));
+
+// Middleware để đọc và xử lý JSON trong request body
 app.use(express.json());
+
+// Middleware để đọc và xử lý dữ liệu từ form (URL-encoded)
 app.use(express.urlencoded({ extended: false }));
+
+// Middleware để xử lý cookie
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+// --- Thiết lập Routes ---
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
+// Áp dụng một prefix chung cho tất cả các API routes, ví dụ /api/v1
+// Điều này giúp quản lý và versioning API tốt hơn
+app.use("/api/v1/", indexRouter);
+app.use("/api/v1/users", usersRouter);
+// app.use('/api/v1/products', productsRouter);
+
+// --- Xử lý lỗi (Error Handling) ---
+
+// Bắt lỗi 404 cho các route không tồn tại và trả về JSON
+app.use((req, res, next) => {
+  res.status(404).json({
+    success: false,
+    message: "Not Found - Route không tồn tại",
+  });
 });
 
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+// Middleware xử lý lỗi tổng quát (cho tất cả các lỗi khác)
+// Luôn đặt middleware này ở cuối cùng
+app.use((err, req, res, next) => {
+  // Lấy status code từ lỗi, nếu không có thì mặc định là 500 (Internal Server Error)
+  const statusCode = err.status || 500;
 
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
+  // Trả về lỗi dưới dạng JSON
+  res.status(statusCode).json({
+    success: false,
+    message: err.message,
+  });
 });
 
 module.exports = app;
