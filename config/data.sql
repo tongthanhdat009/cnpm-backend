@@ -1,7 +1,7 @@
--- Dữ liệu mẫu cho hệ thống xe buýt trường học
-
--- Xóa dữ liệu cũ (tùy chọn, để làm sạch trước khi chèn)
+-- Tạm thời vô hiệu hóa việc kiểm tra khóa ngoại
 SET FOREIGN_KEY_CHECKS = 0;
+
+-- Xóa sạch dữ liệu từ các bảng
 TRUNCATE TABLE `nguoi_dung`;
 TRUNCATE TABLE `thong_bao`;
 TRUNCATE TABLE `hoc_sinh`;
@@ -10,74 +10,82 @@ TRUNCATE TABLE `tuyen_duong`;
 TRUNCATE TABLE `diem_dung`;
 TRUNCATE TABLE `tuyen_duong_diem_dung`;
 TRUNCATE TABLE `phan_cong_hoc_sinh`;
-TRUNCATE TABLE `lich_trinh`;
 TRUNCATE TABLE `chuyen_di`;
 TRUNCATE TABLE `diem_danh_chuyen_di`;
+
+-- Bật lại việc kiểm tra khóa ngoại
 SET FOREIGN_KEY_CHECKS = 1;
-
-
--- 1. Bảng nguoi_dung (Thêm người dùng với các vai trò khác nhau)
+-- 1. Bảng nguoi_dung (Users)
+-- Mật khẩu được hash bằng bcrypt, ví dụ cho 'password123'
 INSERT INTO `nguoi_dung` (`id_nguoi_dung`, `ho_ten`, `ten_tai_khoan`, `mat_khau_bam`, `so_dien_thoai`, `vai_tro`) VALUES
-(1, 'Trần Văn Quản Lý', 'quanly01', 'hashed_password_1', '0901112222', 'quan_ly'),
-(2, 'Nguyễn Thị Phụ Huynh A', 'phuhuynhA', 'hashed_password_2', '0903334444', 'phu_huynh'),
-(3, 'Lê Văn Phụ Huynh B', 'phuhuynhB', 'hashed_password_3', '0905556666', 'phu_huynh'),
-(4, 'Phạm Hùng Tài Xế', 'taixe01', 'hashed_password_4', '0987654321', 'tai_xe'),
-(5, 'Võ Minh Tài Xế', 'taixe02', 'hashed_password_5', '0912345678', 'tai_xe');
+(1, 'Trần Văn An', 'admin', '$2a$10$tJ2b..e.E3z1xW2fH/E93uo6v.L2C/ZRsf2Vb4a5gV42.A.2yG5L.', '0901112222', 'quan_ly'),
+(2, 'Nguyễn Thị Bình', 'phuhuynh_binh', '$2a$10$tJ2b..e.E3z1xW2fH/E93uo6v.L2C/ZRsf2Vb4a5gV42.A.2yG5L.', '0912345678', 'phu_huynh'),
+(3, 'Lê Minh Cường', 'phuhuynh_cuong', '$2a$10$tJ2b..e.E3z1xW2fH/E93uo6v.L2C/ZRsf2Vb4a5gV42.A.2yG5L.', '0987654321', 'phu_huynh'),
+(4, 'Phạm Văn Dũng', 'taixe_dung', '$2a$10$tJ2b..e.E3z1xW2fH/E93uo6v.L2C/ZRsf2Vb4a5gV42.A.2yG5L.', '0905556677', 'tai_xe'),
+(5, 'Võ Thị Em', 'taixe_em', '$2a$10$tJ2b..e.E3z1xW2fH/E93uo6v.L2C/ZRsf2Vb4a5gV42.A.2yG5L.', '0908889900', 'tai_xe');
 
--- 2. Bảng xe_buyt (Thêm thông tin xe buýt)
-INSERT INTO `xe_buyt` (`id_xe_buyt`, `bien_so_xe`, `so_ghe`, `mau_xe`, `vi_do_hien_tai`, `kinh_do_hien_tai`) VALUES
-(1, '51A-123.45', 29, 'Vàng', 10.7766, 106.6955),
-(2, '51B-678.90', 16, 'Xanh', 10.8231, 106.6297);
+-- 2. Bảng xe_buyt (Buses)
+INSERT INTO `xe_buyt` (`id_xe_buyt`, `bien_so_xe`, `so_ghe`, `hang`, `anh`, `vi_do_hien_tai`, `kinh_do_hien_tai`, `lan_cap_nhat_cuoi`) VALUES
+(1, '51B-123.45', 29, 'Hyundai', 'https://example.com/images/bus1.jpg', 10.7769, 106.7009, NOW()),
+(2, '51B-678.90', 16, 'Ford', 'https://example.com/images/bus2.jpg', 10.8231, 106.6297, NOW());
 
--- 3. Bảng diem_dung (Thêm các điểm dừng)
+-- 3. Bảng diem_dung (Stops)
 INSERT INTO `diem_dung` (`id_diem_dung`, `ten_diem_dung`, `dia_chi`, `vi_do`, `kinh_do`) VALUES
-(1, 'Nhà thờ Đức Bà', '01 Công xã Paris, Bến Nghé, Quận 1', 10.7798, 106.6994),
-(2, 'Chung cư The Manor', '91 Nguyễn Hữu Cảnh, Phường 22, Bình Thạnh', 10.7925, 106.7161),
-(3, 'Công viên Hoàng Văn Thụ', 'Đường Hoàng Văn Thụ, Phường 2, Tân Bình', 10.8037, 106.6635),
-(4, 'Trường THPT X', '123 Đường ABC, Phường Y, Quận Z', 10.8511, 106.7554);
+(1, 'Nhà thờ Đức Bà', '01 Công xã Paris, Bến Nghé, Quận 1, TP.HCM', 10.7798, 106.6994),
+(2, 'Công viên Lê Văn Tám', 'Đ. Hai Bà Trưng, Đa Kao, Quận 1, TP.HCM', 10.7898, 106.6923),
+(3, 'Chợ Bến Thành', 'Đ. Lê Lợi, Phường Bến Thành, Quận 1, TP.HCM', 10.7725, 106.6980),
+(4, 'Landmark 81', '720A Đ. Điện Biên Phủ, Vinhomes Tân Cảng, Bình Thạnh, TP.HCM', 10.7951, 106.7219),
+(5, 'Đại học HUTECH', '475A Đ. Điện Biên Phủ, Phường 25, Bình Thạnh, TP.HCM', 10.7974, 106.7037),
+(6, 'Vòng xoay Hàng Xanh', 'Phường 25, Bình Thạnh, TP.HCM', 10.7994, 106.7082);
 
--- 4. Bảng tuyen_duong (Thêm các tuyến đường)
+-- 4. Bảng tuyen_duong (Routes)
 INSERT INTO `tuyen_duong` (`id_tuyen_duong`, `ten_tuyen_duong`, `mo_ta`) VALUES
-(1, 'Tuyến Quận 1 - Bình Thạnh', 'Tuyến đường buổi sáng đón học sinh từ Quận 1 đến trường.'),
-(2, 'Tuyến Tân Bình - Trường', 'Tuyến đường buổi chiều trả học sinh về khu vực Tân Bình.');
+(1, 'Tuyến Quận 1', 'Đón trả học sinh khu vực trung tâm Quận 1'),
+(2, 'Tuyến Bình Thạnh', 'Đón trả học sinh khu vực quận Bình Thạnh');
 
--- 5. Bảng tuyen_duong_diem_dung (Gán điểm dừng vào tuyến đường theo thứ tự)
-INSERT INTO `tuyen_duong_diem_dung` (`id_tuyen_duong`, `id_diem_dung`, `thu_tu_diem_dung`) VALUES
-(1, 1, 1), -- Tuyến 1 bắt đầu ở điểm dừng 1
-(1, 2, 2), -- Tiếp theo đến điểm dừng 2
-(1, 4, 3), -- Cuối cùng là trường học
-(2, 4, 1), -- Tuyến 2 bắt đầu ở trường học
-(2, 3, 2); -- Trả học sinh ở điểm dừng 3
+-- 5. Bảng tuyen_duong_diem_dung (Route Stops Mapping)
+INSERT INTO `tuyen_duong_diem_dung` (`id_diem_dung`, `id_tuyen_duong`, `thu_tu_diem_dung`) VALUES
+-- Tuyến 1
+(1, 1, 1),
+(2, 1, 2),
+(3, 1, 3),
+-- Tuyến 2
+(4, 2, 1),
+(5, 2, 2),
+(6, 2, 3);
 
--- 6. Bảng hoc_sinh (Thêm học sinh và gán phụ huynh, điểm dừng)
-INSERT INTO `hoc_sinh` (`id_hoc_sinh`, `id_phu_huynh`, `id_diem_dung`, `ho_ten`, `lop`) VALUES
-(1, 2, 1, 'Nguyễn Văn An', '6A1'),
-(2, 2, 1, 'Nguyễn Thị Bình', '8A2'),
-(3, 3, 2, 'Lê Thị Cẩm', '7A5');
+-- 6. Bảng hoc_sinh (Students)
+INSERT INTO `hoc_sinh` (`id_hoc_sinh`, `id_phu_huynh`, `id_diem_dung`, `ho_ten`, `lop`, `ghi_chu`) VALUES
+(1, 2, 2, 'Nguyễn Hoàng Gia An', '1A', 'Dị ứng với đậu phộng'),
+(2, 2, 3, 'Nguyễn Hoàng Gia Bảo', '3B', ''),
+(3, 3, 5, 'Lê Tuệ Nhi', '2C', ''),
+(4, 3, 6, 'Lê Tuấn Khang', '5A', 'Say xe nhẹ');
 
--- 7. Bảng phan_cong_hoc_sinh (Phân công học sinh đi theo tuyến nào)
+
+-- 7. Bảng phan_cong_hoc_sinh (Student Route Assignment)
 INSERT INTO `phan_cong_hoc_sinh` (`id_hoc_sinh`, `id_tuyen_duong`) VALUES
 (1, 1),
 (2, 1),
-(3, 1);
+(3, 2),
+(4, 2);
 
--- 8. Bảng lich_trinh (Lập lịch trình cho tài xế, xe và tuyến đường)
-INSERT INTO `lich_trinh` (`id_lich_trinh`, `id_tuyen_duong`, `id_xe_buyt`, `id_tai_xe`, `ngay_bat_dau`, `ngay_ket_thuc`, `gio_khoi_hanh`, `loai_lich_trinh`) VALUES
-(1, 1, 1, 4, '2025-09-01', '2026-05-31', '06:30:00', 'don_buoi_sang'),
-(2, 2, 2, 5, '2025-09-01', '2026-05-31', '16:30:00', 'tra_buoi_chieu');
+-- 8. Bảng chuyen_di (Trips)
+-- Giả sử hôm nay là ngày 2025-10-17
+INSERT INTO `chuyen_di` (`id_chuyen_di`, `id_tai_xe`, `id_tuyen_duong`, `id_xe_buyt`, `loai_chuyen_di`, `gio_khoi_hanh`, `ngay`, `trang_thai`, `thoi_gian_bat_dau_thuc_te`, `thoi_gian_ket_thuc_thuc_te`) VALUES
+(1, 4, 1, 1, 'don_hoc_sinh', '06:30:00', '2025-10-17', 'hoan_thanh', '2025-10-17 06:32:00', '2025-10-17 07:15:00'),
+(2, 4, 1, 1, 'tra_hoc_sinh', '16:30:00', '2025-10-17', 'cho_khoi_hanh', NULL, NULL),
+(3, 5, 2, 2, 'don_hoc_sinh', '06:45:00', '2025-10-17', 'dang_di', '2025-10-17 06:45:00', NULL),
+(4, 5, 2, 2, 'tra_hoc_sinh', '16:45:00', '2025-10-17', 'da_huy', NULL, NULL);
 
--- 9. Bảng chuyen_di (Tạo ra các chuyến đi cụ thể từ lịch trình)
-INSERT INTO `chuyen_di` (`id_chuyen_di`, `id_lich_trinh`, `trang_thai`, `thoi_gian_bat_dau_thuc_te`) VALUES
-(1, 1, 'dang_di', '2025-09-29 06:32:00'),
-(2, 2, 'cho_khoi_hanh', NULL);
+-- 9. Bảng diem_danh_chuyen_di (Trip Attendance)
+INSERT INTO `diem_danh_chuyen_di` (`id_diem_danh`, `id_hoc_sinh`, `id_chuyen_di`, `id_diem_dung`, `trang_thai`, `thoi_gian`) VALUES
+-- Chuyến đi 1 (sáng, tuyến 1, đã hoàn thành)
+(1, 1, 1, 2, 'da_don', '2025-10-17 06:45:10'),
+(2, 2, 1, 3, 'vang_mat', '2025-10-17 07:00:00'),
+-- Chuyến đi 3 (sáng, tuyến 2, đang đi)
+(3, 3, 3, 5, 'da_don', '2025-10-17 07:05:30');
 
--- 10. Bảng diem_danh_chuyen_di (Thực hiện điểm danh cho chuyến đi)
-INSERT INTO `diem_danh_chuyen_di` (`id_chuyen_di`, `id_hoc_sinh`, `trang_thai`, `thoi_gian`) VALUES
-(1, 1, 'da_don', '2025-09-29 06:45:10'),
-(1, 3, 'da_don', '2025-09-29 07:05:25'),
-(1, 2, 'vang_mat', '2025-09-29 06:45:15');
-
--- 11. Bảng thong_bao (Gửi một vài thông báo)
-INSERT INTO `thong_bao` (`id_nguoi_nhan`, `id_nguoi_gui`, `da_xem`, `thoi_gian`, `tieu_de`, `noi_dung`) VALUES
-(2, 1, false, '2025-09-28 22:00:00', 'Thông báo nghỉ lễ', 'Nhà trường thông báo học sinh được nghỉ lễ Quốc Khánh vào ngày 2/9.'),
-(4, 1, true, '2025-09-29 08:00:00', 'Lịch bảo dưỡng xe', 'Yêu cầu tài xế Phạm Hùng đưa xe 51A-123.45 đi bảo dưỡng vào cuối tuần.');
+-- 10. Bảng thong_bao (Notifications)
+INSERT INTO `thong_bao` (`id_thong_bao`, `id_nguoi_nhan`, `id_nguoi_gui`, `da_xem`, `thoi_gian`, `tieu_de`, `noi_dung`) VALUES
+(1, 2, 1, 0, '2025-10-16 17:00:00', 'Thông báo nghỉ lễ', 'Nhà trường thông báo học sinh sẽ được nghỉ lễ vào ngày 30/10/2025.'),
+(2, 3, 5, 1, '2025-10-17 06:50:00', 'Xe đến trễ', 'Do kẹt xe, xe buýt tuyến Bình Thạnh dự kiến sẽ đến trễ 10 phút. Mong quý phụ huynh thông cảm.');

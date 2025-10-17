@@ -7,6 +7,7 @@ const cors = require("cors"); // Thêm CORS
 // Import các file routes
 const indexRouter = require("./routes/index");
 const usersRouter = require("./routes/users");
+const diemDungRouter = require("./routes/diem_dung");
 // Thêm các routes khác của bạn ở đây, ví dụ: const productsRouter = require('./routes/products');
 
 const app = express();
@@ -34,6 +35,7 @@ app.use(cookieParser());
 // Điều này giúp quản lý và versioning API tốt hơn
 app.use("/api/v1/", indexRouter);
 app.use("/api/v1/users", usersRouter);
+app.use("/api/diem-dung", diemDungRouter);
 // app.use('/api/v1/products', productsRouter);
 
 // --- Xử lý lỗi (Error Handling) ---

@@ -114,4 +114,3 @@ ALTER TABLE `thong_bao` ADD FOREIGN KEY (`id_nguoi_gui`) REFERENCES `nguoi_dung`
 ALTER TABLE `thong_bao` ADD FOREIGN KEY (`id_nguoi_nhan`) REFERENCES `nguoi_dung` (`id_nguoi_dung`);
 
 ALTER TABLE `diem_danh_chuyen_di` ADD FOREIGN KEY (`id_diem_dung`) REFERENCES `diem_dung` (`id_diem_dung`) ON DELETE CASCADE;
-
