@@ -16,13 +16,13 @@ TRUNCATE TABLE `diem_danh_chuyen_di`;
 -- Bật lại việc kiểm tra khóa ngoại
 SET FOREIGN_KEY_CHECKS = 1;
 -- 1. Bảng nguoi_dung (Users)
--- Mật khẩu được hash bằng bcrypt, ví dụ cho 'password123'
+-- Mật khẩu được hash bằng bcrypt, ví dụ cho 'matkhau123'
 INSERT INTO `nguoi_dung` (`id_nguoi_dung`, `ho_ten`, `ten_tai_khoan`, `mat_khau_bam`, `so_dien_thoai`, `vai_tro`) VALUES
-(1, 'Trần Văn An', 'admin', '$2a$10$tJ2b..e.E3z1xW2fH/E93uo6v.L2C/ZRsf2Vb4a5gV42.A.2yG5L.', '0901112222', 'quan_ly'),
-(2, 'Nguyễn Thị Bình', 'phuhuynh_binh', '$2a$10$tJ2b..e.E3z1xW2fH/E93uo6v.L2C/ZRsf2Vb4a5gV42.A.2yG5L.', '0912345678', 'phu_huynh'),
-(3, 'Lê Minh Cường', 'phuhuynh_cuong', '$2a$10$tJ2b..e.E3z1xW2fH/E93uo6v.L2C/ZRsf2Vb4a5gV42.A.2yG5L.', '0987654321', 'phu_huynh'),
-(4, 'Phạm Văn Dũng', 'taixe_dung', '$2a$10$tJ2b..e.E3z1xW2fH/E93uo6v.L2C/ZRsf2Vb4a5gV42.A.2yG5L.', '0905556677', 'tai_xe'),
-(5, 'Võ Thị Em', 'taixe_em', '$2a$10$tJ2b..e.E3z1xW2fH/E93uo6v.L2C/ZRsf2Vb4a5gV42.A.2yG5L.', '0908889900', 'tai_xe');
+(1, 'Trần Văn An', 'admin', '$2b$10$PnZjYxZ9FdvLkcnQs6MIDOf2w0mkMoVueUQS95G57pUq8tng0Ufhu', '0901112222', 'quan_ly'),
+(2, 'Nguyễn Thị Bình', 'phuhuynh_binh', '$2b$10$PnZjYxZ9FdvLkcnQs6MIDOf2w0mkMoVueUQS95G57pUq8tng0Ufhu', '0912345678', 'phu_huynh'),
+(3, 'Lê Minh Cường', 'phuhuynh_cuong', '$2b$10$PnZjYxZ9FdvLkcnQs6MIDOf2w0mkMoVueUQS95G57pUq8tng0Ufhu', '0987654321', 'phu_huynh'),
+(4, 'Phạm Văn Dũng', 'taixe_dung', '$2b$10$PnZjYxZ9FdvLkcnQs6MIDOf2w0mkMoVueUQS95G57pUq8tng0Ufhu', '0905556677', 'tai_xe'),
+(5, 'Võ Thị Em', 'taixe_em', '$2b$10$PnZjYxZ9FdvLkcnQs6MIDOf2w0mkMoVueUQS95G57pUq8tng0Ufhu', '0908889900', 'tai_xe');
 
 -- 2. Bảng xe_buyt (Buses)
 INSERT INTO `xe_buyt` (`id_xe_buyt`, `bien_so_xe`, `so_ghe`, `hang`, `anh`, `vi_do_hien_tai`, `kinh_do_hien_tai`, `lan_cap_nhat_cuoi`) VALUES
