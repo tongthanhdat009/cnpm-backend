@@ -2,7 +2,7 @@ const { Sequelize } = require("sequelize");
 const initModels = require("./model/init-models");
 
 // Tạo kết nối Sequelize
-const sequelize = new Sequelize("ssb", "root", "Dat12345@", {
+const sequelize = new Sequelize("ssb", "root", "", {
   host: "localhost",
   dialect: "mysql",
   logging: false, // Tắt log SQL queries
