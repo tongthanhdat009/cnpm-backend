@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model chuyen_di {
+  id_chuyen_di               Int                   @id @default(autoincrement())
+  id_tai_xe                  Int?
+  id_tuyen_duong             Int?
+  id_xe_buyt                 Int?
+  loai_chuyen_di             String?               @db.VarChar(30)
+  gio_khoi_hanh              DateTime              @db.Time(0)
+  ngay                       DateTime              @db.Date
+  trang_thai                 chuyen_di_trang_thai? @default(cho_khoi_hanh)
+  thoi_gian_bat_dau_thuc_te  DateTime?             @db.DateTime(0)
+  thoi_gian_ket_thuc_thuc_te DateTime?             @db.DateTime(0)
+  tuyen_duong                tuyen_duong?          @relation(fields: [id_tuyen_duong], references: [id_tuyen_duong], onDelete: Restrict, onUpdate: Restrict, map: "chuyen_di_ibfk_1")
+  xe_buyt                    xe_buyt?              @relation(fields: [id_xe_buyt], references: [id_xe_buyt], onDelete: Restrict, onUpdate: Restrict, map: "chuyen_di_ibfk_2")
+  nguoi_dung                 nguoi_dung?           @relation(fields: [id_tai_xe], references: [id_nguoi_dung], onDelete: Restrict, onUpdate: Restrict, map: "chuyen_di_ibfk_3")
+  diem_danh_chuyen_di        diem_danh_chuyen_di[]
+
+  @@index([id_tai_xe], map: "id_tai_xe")
+  @@index([id_tuyen_duong], map: "id_tuyen_duong")
+  @@index([id_xe_buyt], map: "id_xe_buyt")
+}
+
+model diem_danh_chuyen_di {
+  id_diem_danh Int                            @id @default(autoincrement())
+  id_hoc_sinh  Int?
+  id_chuyen_di Int?
+  id_diem_dung Int?
+  trang_thai   diem_danh_chuyen_di_trang_thai
+  thoi_gian    DateTime                       @db.DateTime(0)
+  chuyen_di    chuyen_di?                     @relation(fields: [id_chuyen_di], references: [id_chuyen_di], onDelete: Cascade, onUpdate: Restrict, map: "diem_danh_chuyen_di_ibfk_1")
+  hoc_sinh     hoc_sinh?                      @relation(fields: [id_hoc_sinh], references: [id_hoc_sinh], onDelete: Restrict, onUpdate: Restrict, map: "diem_danh_chuyen_di_ibfk_2")
+  diem_dung    diem_dung?                     @relation(fields: [id_diem_dung], references: [id_diem_dung], onDelete: Cascade, onUpdate: Restrict, map: "diem_danh_chuyen_di_ibfk_3")
+
+  @@index([id_chuyen_di], map: "id_chuyen_di")
+  @@index([id_diem_dung], map: "id_diem_dung")
+  @@index([id_hoc_sinh], map: "id_hoc_sinh")
+}
+
+model diem_dung {
+  id_diem_dung          Int                     @id @default(autoincrement())
+  ten_diem_dung         String                  @db.VarChar(100)
+  dia_chi               String?                 @db.VarChar(255)
+  vi_do                 Decimal                 @db.Decimal(10, 8)
+  kinh_do               Decimal                 @db.Decimal(11, 8)
+  diem_danh_chuyen_di   diem_danh_chuyen_di[]
+  hoc_sinh              hoc_sinh[]
+  tuyen_duong_diem_dung tuyen_duong_diem_dung[]
+}
+
+model hoc_sinh {
+  id_hoc_sinh         Int                   @id @default(autoincrement())
+  id_phu_huynh        Int?
+  id_diem_dung        Int?
+  ho_ten              String?               @db.VarChar(100)
+  lop                 String?               @db.VarChar(10)
+  ghi_chu             String?               @db.Text
+  diem_danh_chuyen_di diem_danh_chuyen_di[]
+  nguoi_dung          nguoi_dung?           @relation(fields: [id_phu_huynh], references: [id_nguoi_dung], onUpdate: Restrict, map: "hoc_sinh_ibfk_1")
+  diem_dung           diem_dung?            @relation(fields: [id_diem_dung], references: [id_diem_dung], onDelete: Cascade, onUpdate: Restrict, map: "hoc_sinh_ibfk_2")
+  phan_cong_hoc_sinh  phan_cong_hoc_sinh[]
+
+  @@index([id_diem_dung], map: "id_diem_dung")
+  @@index([id_phu_huynh], map: "id_phu_huynh")
+}
+
+model nguoi_dung {
+  id_nguoi_dung                                 Int                @id @default(autoincrement())
+  ho_ten                                        String             @db.VarChar(100)
+  ten_tai_khoan                                 String             @unique(map: "ten_tai_khoan") @db.VarChar(100)
+  mat_khau_bam                                  String             @db.VarChar(255)
+  so_dien_thoai                                 String?            @unique(map: "so_dien_thoai") @db.VarChar(20)
+  vai_tro                                       nguoi_dung_vai_tro
+  ngay_tao                                      DateTime           @default(now()) @db.Timestamp(0)
+  chuyen_di                                     chuyen_di[]
+  hoc_sinh                                      hoc_sinh[]
+  thong_bao_thong_bao_id_nguoi_guiTonguoi_dung  thong_bao[]        @relation("thong_bao_id_nguoi_guiTonguoi_dung")
+  thong_bao_thong_bao_id_nguoi_nhanTonguoi_dung thong_bao[]        @relation("thong_bao_id_nguoi_nhanTonguoi_dung")
+}
+
+model phan_cong_hoc_sinh {
+  id_phan_cong   Int          @id @default(autoincrement())
+  id_hoc_sinh    Int?
+  id_tuyen_duong Int?
+  hoc_sinh       hoc_sinh?    @relation(fields: [id_hoc_sinh], references: [id_hoc_sinh], onDelete: Cascade, onUpdate: Restrict, map: "phan_cong_hoc_sinh_ibfk_1")
+  tuyen_duong    tuyen_duong? @relation(fields: [id_tuyen_duong], references: [id_tuyen_duong], onDelete: Cascade, onUpdate: Restrict, map: "phan_cong_hoc_sinh_ibfk_2")
+
+  @@index([id_hoc_sinh], map: "id_hoc_sinh")
+  @@index([id_tuyen_duong], map: "id_tuyen_duong")
+}
+
+model thong_bao {
+  id_thong_bao                                   Int         @id @default(autoincrement())
+  id_nguoi_nhan                                  Int?
+  id_nguoi_gui                                   Int?
+  da_xem                                         Boolean?
+  thoi_gian                                      DateTime?   @db.DateTime(0)
+  tieu_de                                        String      @db.VarChar(100)
+  noi_dung                                       String      @unique(map: "noi_dung") @db.VarChar(255)
+  nguoi_dung_thong_bao_id_nguoi_guiTonguoi_dung  nguoi_dung? @relation("thong_bao_id_nguoi_guiTonguoi_dung", fields: [id_nguoi_gui], references: [id_nguoi_dung], onDelete: Restrict, onUpdate: Restrict, map: "thong_bao_ibfk_1")
+  nguoi_dung_thong_bao_id_nguoi_nhanTonguoi_dung nguoi_dung? @relation("thong_bao_id_nguoi_nhanTonguoi_dung", fields: [id_nguoi_nhan], references: [id_nguoi_dung], onDelete: Restrict, onUpdate: Restrict, map: "thong_bao_ibfk_2")
+
+  @@index([id_nguoi_gui], map: "id_nguoi_gui")
+  @@index([id_nguoi_nhan], map: "id_nguoi_nhan")
+}
+
+model tuyen_duong {
+  id_tuyen_duong        Int                     @id @default(autoincrement())
+  ten_tuyen_duong       String                  @db.VarChar(100)
+  mo_ta                 String?                 @db.Text
+  chuyen_di             chuyen_di[]
+  phan_cong_hoc_sinh    phan_cong_hoc_sinh[]
+  tuyen_duong_diem_dung tuyen_duong_diem_dung[]
+}
+
+model tuyen_duong_diem_dung {
+  id_tuyen_duong_diem_dung Int          @id @default(autoincrement())
+  id_diem_dung             Int?
+  id_tuyen_duong           Int?
+  thu_tu_diem_dung         Int
+  tuyen_duong              tuyen_duong? @relation(fields: [id_tuyen_duong], references: [id_tuyen_duong], onDelete: Cascade, onUpdate: Restrict, map: "tuyen_duong_diem_dung_ibfk_1")
+  diem_dung                diem_dung?   @relation(fields: [id_diem_dung], references: [id_diem_dung], onDelete: Cascade, onUpdate: Restrict, map: "tuyen_duong_diem_dung_ibfk_2")
+
+  @@index([id_diem_dung], map: "id_diem_dung")
+  @@index([id_tuyen_duong], map: "id_tuyen_duong")
+}
+
+model xe_buyt {
+  id_xe_buyt        Int         @id @default(autoincrement())
+  bien_so_xe        String      @unique(map: "bien_so_xe") @db.VarChar(20)
+  so_ghe            Int?
+  hang              String?     @db.VarChar(50)
+  anh               String?     @db.VarChar(255)
+  vi_do_hien_tai    Decimal?    @db.Decimal(10, 8)
+  kinh_do_hien_tai  Decimal?    @db.Decimal(11, 8)
+  lan_cap_nhat_cuoi DateTime    @default(now()) @db.Timestamp(0)
+  chuyen_di         chuyen_di[]
+}
+
+enum diem_danh_chuyen_di_trang_thai {
+  da_don
+  da_tra
+  vang_mat
+}
+
+enum nguoi_dung_vai_tro {
+  quan_ly
+  phu_huynh
+  tai_xe
+}
+
+enum chuyen_di_trang_thai {
+  cho_khoi_hanh
+  dang_di
+  hoan_thanh
+  da_huy
+  bi_tre
+}
