@@ -39,9 +39,9 @@ INSERT INTO `diem_dung` (`id_diem_dung`, `ten_diem_dung`, `dia_chi`, `vi_do`, `k
 (6, 'Vòng xoay Hàng Xanh', 'Phường 25, Bình Thạnh, TP.HCM', 10.7994, 106.7082);
 
 -- 4. Bảng tuyen_duong (Routes)
-INSERT INTO `tuyen_duong` (`id_tuyen_duong`, `ten_tuyen_duong`, `mo_ta`, `thoi_gian_du_kien`) VALUES
-(1, 'Tuyến Quận 1', 'Đón trả học sinh khu vực trung tâm Quận 1', 30),
-(2, 'Tuyến Bình Thạnh', 'Đón trả học sinh khu vực quận Bình Thạnh', 25);
+INSERT INTO `tuyen_duong` (`id_tuyen_duong`, `ten_tuyen_duong`, `quang_duong`, `thoi_gian_du_kien`, `mo_ta`) VALUES
+(1, 'Tuyến Quận 1', 10, 30, 'Tuyến qua trung tâm Quận 1, Quận 5.'),
+(2, 'Tuyến Bình Thạnh', 8, 25, 'Tuyến đi qua khu vực Bình Thạnh, Landmark 81.');
 
 -- 5. Bảng tuyen_duong_diem_dung (Route Stops Mapping)
 INSERT INTO `tuyen_duong_diem_dung` (`id_diem_dung`, `id_tuyen_duong`, `thu_tu_diem_dung`) VALUES

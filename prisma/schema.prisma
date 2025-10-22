@@ -114,6 +114,8 @@ model thong_bao {
 model tuyen_duong {
   id_tuyen_duong        Int                     @id @default(autoincrement())
   ten_tuyen_duong       String                  @db.VarChar(100)
+  quang_duong           Int
+  thoi_gian_du_kien     Int?
   mo_ta                 String?                 @db.Text
   chuyen_di             chuyen_di[]
   phan_cong_hoc_sinh    phan_cong_hoc_sinh[]
