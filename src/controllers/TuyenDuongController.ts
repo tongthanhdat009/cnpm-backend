@@ -39,6 +39,27 @@ export class TuyenDuongController {
       res.status(500).json({ message: "Lỗi server khi lấy tuyến đường" });
     }
   }
+
+  async getThoiLuongDuKien(req: Request, res: Response) {
+    if (!req.params.id) {
+      return res.status(400).json({ message: "Thiếu tham số id" });
+    }
+    const id = parseInt(req.params.id, 10);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "ID không hợp lệ" });
+    }
+
+    try {
+      const data = await TuyenDuongService.getThoiLuongDuKien(id);
+      res.json(data);
+    } catch (error: any) {
+      console.error(error);
+      res.status(500).json({ 
+        message: error.message || "Lỗi server khi tính thời lượng dự kiến" 
+      });
+    }
+  }
 }
 
 export default new TuyenDuongController();
