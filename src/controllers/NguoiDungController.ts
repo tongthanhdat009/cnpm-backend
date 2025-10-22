@@ -38,5 +38,23 @@ export class NguoiDungController {
             return res.status(500).json({ success: false, message: "Lỗi máy chủ", error: (err as Error).message });
         }   
     }
+    
+    async getNguoiDungByVaiTro(req: Request, res: Response) {
+        const { vaiTro } = req.params;
+        if (!vaiTro) {
+            return res.status(400).json({ success: false, message: "Thiếu tham số vaiTro" });
+        }
+        try {
+            const result = await this.service.getNguoiDungByVaiTro(vaiTro);
+            if (result.success) {
+                return res.status(200).json(result);
+            }
+            else {
+                return res.status(404).json(result);
+            }
+        } catch (err) {
+            return res.status(500).json({ success: false, message: "Lỗi máy chủ", error: (err as Error).message });
+        }
+    }
 }
 export default new NguoiDungController();

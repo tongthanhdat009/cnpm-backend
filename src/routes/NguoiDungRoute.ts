@@ -1,9 +1,10 @@
-import { NguoiDungController } from "../controllers/NguoiDungController";
+import NguoiDungController from '../controllers/NguoiDungController';
 import { Router } from "express";
 const router = Router();
-const nguoiDungController = new NguoiDungController();
 
-router.get("/", nguoiDungController.getAllNguoiDung.bind(nguoiDungController));
+router.get("/", NguoiDungController.getAllNguoiDung.bind(NguoiDungController));
 
-router.get("/:id", nguoiDungController.getNguoiDungById.bind(nguoiDungController));
+router.get("/:id", NguoiDungController.getNguoiDungById.bind(NguoiDungController));
+
+router.get("/vai-tro/:vaiTro", NguoiDungController.getNguoiDungByVaiTro.bind(NguoiDungController));
 export default router;

@@ -46,4 +46,25 @@ export class NguoiDungService {
             };
         }
     }
+
+    /**
+     * Lấy người dùng theo vai trò
+     */
+    async getNguoiDungByVaiTro(vaiTro: string) {
+        try {
+            const nguoiDungs = await this.repo.getNguoiDungByVaiTro(vaiTro as any);
+            return {
+                success: true,
+                message: "Lấy danh sách người dùng theo vai trò thành công",
+                data: nguoiDungs,
+                total: nguoiDungs.length
+            };
+        } catch (error: any) {
+            return {
+                success: false,
+                message: "Lỗi khi lấy danh sách người dùng theo vai trò",
+                error: error.message
+            };
+        }
+    }
 }
