@@ -41,6 +41,7 @@ CREATE TABLE `xe_buyt` (
 CREATE TABLE `tuyen_duong` (
   `id_tuyen_duong` INT PRIMARY KEY AUTO_INCREMENT,
   `ten_tuyen_duong` VARCHAR(100) NOT NULL,
+  `thoi_gian_du_kien` INT,
   `mo_ta` TEXT
 );
 
