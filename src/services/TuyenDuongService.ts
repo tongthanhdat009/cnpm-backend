@@ -19,5 +19,9 @@ export class TuyenDuongService {
     return result;
   }
 
+  async getTuyenDuongById(id: number) {
+    const result = await this.repo.getTuyenDuongById(id);
+    return result;
+  }
 }
 export default new TuyenDuongService();
