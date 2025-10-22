@@ -2,6 +2,9 @@ import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import authRoute from './routes/AuthRoute';
 import tuyenDuongRoute from './routes/TuyenDuongRoute';
+import chuyenDiRoute from './routes/ChuyenDiRoute';
+import nguoiDungRoute from './routes/NguoiDungRoute';
+import xeBuytRoute from './routes/XeBuytRoute';
 
 const app: Application = express();
 const PORT = process.env.PORT || 3000;
@@ -14,7 +17,9 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api/v1/auth', authRoute);
 app.use('/api/v1/tuyen-duong', tuyenDuongRoute);
-
+app.use('/api/v1/chuyen-di', chuyenDiRoute);
+app.use('/api/v1/nguoi-dung', nguoiDungRoute);
+app.use('/api/v1/xe-buyt', xeBuytRoute);
 // Health check
 app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'OK', message: 'Server is running' });

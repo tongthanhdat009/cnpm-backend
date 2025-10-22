@@ -46,7 +46,6 @@ export class AuthRepository {
         vai_tro: true,
         so_dien_thoai: true,
         ngay_tao: true,
-        mat_khau_bam: false, // Không trả về password
       },
     });
   }

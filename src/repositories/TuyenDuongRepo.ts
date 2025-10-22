@@ -12,4 +12,16 @@ export class TuyenDuongRepo {
       },
     });
   }
+  async getTuyenDuongById(id: number) {
+    return await prisma.tuyen_duong.findUnique({
+      where: { id_tuyen_duong: id },
+      include: {
+        tuyen_duong_diem_dung: {
+          include: {
+            diem_dung: true,
+          },
+        },
+      },
+    });
+  }
 }

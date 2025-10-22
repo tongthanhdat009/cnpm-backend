@@ -11,4 +11,8 @@ export class TuyenDuongService {
     const result = await this.repo.getAll();
     return result;
   }
+  async getTuyenDuongById(id: number) {
+    const result = await this.repo.getTuyenDuongById(id);
+    return result;
+  }
 }
