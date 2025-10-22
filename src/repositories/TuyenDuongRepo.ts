@@ -2,7 +2,7 @@ import prisma from "../prisma/client";
 
 export class TuyenDuongRepo {
   async getAll() {
-    return await prisma.tuyen_duong.findMany({
+    const data = await prisma.tuyen_duong.findMany({
       select: {
         id_tuyen_duong: true,
         ten_tuyen_duong: true,
@@ -10,30 +10,28 @@ export class TuyenDuongRepo {
         tuyen_duong_diem_dung: {
           select: {
             thu_tu_diem_dung: true,
-            diem_dung: {
-              select: {
-                id_diem_dung: true,
-                ten_diem_dung: true,
-                dia_chi: true,
-                kinh_do: true,
-                vi_do: true,
-              },
-            },
+            id_diem_dung: true,
           },
         },
         phan_cong_hoc_sinh: {
           select: {
-            hoc_sinh: {
-              select: {
-                id_hoc_sinh: true,
-                ho_ten: true,
-              },
-            },
+            id_hoc_sinh: true,
           },
         },
       },
     });
+
+    // 🔹 Biến đổi dữ liệu gốc trước khi trả ra
+    const result = data.map(td => ({
+      ...td,
+      // chỉ lấy mảng id_hoc_sinh
+      phan_cong_hoc_sinh: td.phan_cong_hoc_sinh.map(pc => pc.id_hoc_sinh),
+    }));
+
+    return result;
   }
+
+
   async checkNameExists(ten_tuyen_duong: string) {
     const count = await prisma.tuyen_duong.count({
       where: { ten_tuyen_duong },

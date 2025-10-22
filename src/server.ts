@@ -5,6 +5,8 @@ import tuyenDuongRoute from './routes/TuyenDuongRoute';
 import chuyenDiRoute from './routes/ChuyenDiRoute';
 import nguoiDungRoute from './routes/NguoiDungRoute';
 import xeBuytRoute from './routes/XeBuytRoute';
+import diemDungRoute from './routes/DiemDungRoute';
+import hocSinhRoute from './routes/HocSinhRoute';
 
 const app: Application = express();
 const PORT = process.env.PORT || 3000;
@@ -20,6 +22,8 @@ app.use('/api/v1/tuyen-duong', tuyenDuongRoute);
 app.use('/api/v1/chuyen-di', chuyenDiRoute);
 app.use('/api/v1/nguoi-dung', nguoiDungRoute);
 app.use('/api/v1/xe-buyt', xeBuytRoute);
+app.use('/api/v1/diem-dung', diemDungRoute);
+app.use('/api/v1/hoc-sinh', hocSinhRoute);
 // Health check
 app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'OK', message: 'Server is running' });
