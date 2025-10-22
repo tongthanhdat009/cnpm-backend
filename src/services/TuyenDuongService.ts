@@ -17,10 +17,23 @@ export class TuyenDuongService {
   }
 
   async create(data: any) {
-    if (data.tuyen_duong_diem_dungs.length <= 1) {
-      throw new Error("Danh sách điểm dừng không được để trống");
+    // Chuẩn hóa input và kiểm tra tối thiểu 2 điểm dừng
+    const stops = Array.isArray(data?.tuyen_duong_diem_dung)
+      ? data.tuyen_duong_diem_dung
+      : [];
+
+    if (stops.length < 3) {
+      throw new Error("Danh sách điểm dừng phải có ít nhất 3 điểm");
     }
-    const result = await this.repo.create(data);
+
+    // Gọi repo tạo tuyến đường
+    const result = await this.repo.create({
+      ten_tuyen_duong: data.ten_tuyen_duong,
+      quang_duong: data.quang_duong,
+      thoi_gian_du_kien: data.thoi_gian_du_kien,
+      mo_ta: data.mo_ta ?? null,
+      tuyen_duong_diem_dung: stops,
+    });
     return result;
   }
 

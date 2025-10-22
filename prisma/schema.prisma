@@ -117,6 +117,7 @@ model tuyen_duong {
   quang_duong           Int
   thoi_gian_du_kien     Int?
   mo_ta                 String?                 @db.Text
+  isDelete              Boolean                 @default(false)
   chuyen_di             chuyen_di[]
   phan_cong_hoc_sinh    phan_cong_hoc_sinh[]
   tuyen_duong_diem_dung tuyen_duong_diem_dung[]

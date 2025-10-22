@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th10 22, 2025 lúc 08:02 PM
+-- Thời gian đã tạo: Th10 22, 2025 lúc 11:03 PM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -40,6 +40,16 @@ CREATE TABLE `chuyen_di` (
   `thoi_gian_ket_thuc_thuc_te` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Đang đổ dữ liệu cho bảng `chuyen_di`
+--
+
+INSERT INTO `chuyen_di` (`id_chuyen_di`, `id_tai_xe`, `id_tuyen_duong`, `id_xe_buyt`, `loai_chuyen_di`, `gio_khoi_hanh`, `ngay`, `trang_thai`, `thoi_gian_bat_dau_thuc_te`, `thoi_gian_ket_thuc_thuc_te`) VALUES
+(1, 4, 2, 1, 'don_hoc_sinh', '06:30:00', '2025-10-17', 'hoan_thanh', '2025-10-17 06:32:00', '2025-10-17 07:15:00'),
+(2, 4, 2, 1, 'tra_hoc_sinh', '16:30:00', '2025-10-17', 'cho_khoi_hanh', NULL, NULL),
+(3, 5, 2, 2, 'don_hoc_sinh', '06:45:00', '2025-10-17', 'dang_di', '2025-10-17 06:45:00', NULL),
+(4, 5, 2, 2, 'tra_hoc_sinh', '16:45:00', '2025-10-17', 'da_huy', NULL, NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -55,6 +65,15 @@ CREATE TABLE `diem_danh_chuyen_di` (
   `thoi_gian` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Đang đổ dữ liệu cho bảng `diem_danh_chuyen_di`
+--
+
+INSERT INTO `diem_danh_chuyen_di` (`id_diem_danh`, `id_hoc_sinh`, `id_chuyen_di`, `id_diem_dung`, `trang_thai`, `thoi_gian`) VALUES
+(1, 1, 1, 2, 'da_don', '2025-10-17 06:45:10'),
+(2, 2, 1, 3, 'vang_mat', '2025-10-17 07:00:00'),
+(3, 3, 3, 5, 'da_don', '2025-10-17 07:05:30');
+
 -- --------------------------------------------------------
 
 --
@@ -68,6 +87,19 @@ CREATE TABLE `diem_dung` (
   `vi_do` decimal(10,8) NOT NULL,
   `kinh_do` decimal(11,8) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `diem_dung`
+--
+
+INSERT INTO `diem_dung` (`id_diem_dung`, `ten_diem_dung`, `dia_chi`, `vi_do`, `kinh_do`) VALUES
+(0, 'Đại học Sài Gòn', ' An Dương Vương, P.2, Q.5, TP.HCM', 10.76067657, 106.68242831),
+(1, 'Đại học Sài Gòn', 'An Dương Vương, P.2, Q.5, TP.HCM', 10.76067657, 106.68242831),
+(2, 'Công viên Lê Văn Tám', 'Hai Bà Trưng, Đa Kao, Q.1, TP.HCM', 10.78980000, 106.69230000),
+(3, 'THPT Nam Kỳ Khởi Nghĩa', 'Đ. 3/2, P.16, Q.11, TP.HCM', 10.75862327, 106.65055088),
+(4, 'Landmark 81', '720A Điện Biên Phủ, Bình Thạnh, TP.HCM', 10.79510000, 106.72190000),
+(5, 'Đại học HUTECH', '475A Điện Biên Phủ, Bình Thạnh, TP.HCM', 10.79740000, 106.70370000),
+(6, 'Vòng xoay Hàng Xanh', 'Phường 25, Bình Thạnh, TP.HCM', 10.79940000, 106.70820000);
 
 -- --------------------------------------------------------
 
@@ -83,6 +115,16 @@ CREATE TABLE `hoc_sinh` (
   `lop` varchar(10) DEFAULT NULL,
   `ghi_chu` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `hoc_sinh`
+--
+
+INSERT INTO `hoc_sinh` (`id_hoc_sinh`, `id_phu_huynh`, `id_diem_dung`, `ho_ten`, `lop`, `ghi_chu`) VALUES
+(1, 2, 2, 'Nguyễn Hoàng Gia An', '1A', 'Dị ứng với đậu phộng'),
+(2, 2, 3, 'Nguyễn Hoàng Gia Bảo', '3B', ''),
+(3, 3, 5, 'Lê Tuệ Nhi', '2C', ''),
+(4, 3, 6, 'Lê Tuấn Khang', '5A', 'Say xe nhẹ');
 
 -- --------------------------------------------------------
 
@@ -100,6 +142,17 @@ CREATE TABLE `nguoi_dung` (
   `ngay_tao` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Đang đổ dữ liệu cho bảng `nguoi_dung`
+--
+
+INSERT INTO `nguoi_dung` (`id_nguoi_dung`, `ho_ten`, `ten_tai_khoan`, `mat_khau_bam`, `so_dien_thoai`, `vai_tro`, `ngay_tao`) VALUES
+(1, 'Trần Văn An', 'admin', '$2b$10$PnZjYxZ9FdvLkcnQs6MIDOf2w0mkMoVueUQS95G57pUq8tng0Ufhu', '0901112222', 'quan_ly', '2025-10-22 18:13:58'),
+(2, 'Nguyễn Thị Bình', 'phuhuynh_binh', '$2b$10$PnZjYxZ9FdvLkcnQs6MIDOf2w0mkMoVueUQS95G57pUq8tng0Ufhu', '0912345678', 'phu_huynh', '2025-10-22 18:13:58'),
+(3, 'Lê Minh Cường', 'phuhuynh_cuong', '$2b$10$PnZjYxZ9FdvLkcnQs6MIDOf2w0mkMoVueUQS95G57pUq8tng0Ufhu', '0987654321', 'phu_huynh', '2025-10-22 18:13:58'),
+(4, 'Phạm Văn Dũng', 'taixe_dung', '$2b$10$PnZjYxZ9FdvLkcnQs6MIDOf2w0mkMoVueUQS95G57pUq8tng0Ufhu', '0905556677', 'tai_xe', '2025-10-22 18:13:58'),
+(5, 'Võ Thị Em', 'taixe_em', '$2b$10$PnZjYxZ9FdvLkcnQs6MIDOf2w0mkMoVueUQS95G57pUq8tng0Ufhu', '0908889900', 'tai_xe', '2025-10-22 18:13:58');
+
 -- --------------------------------------------------------
 
 --
@@ -111,6 +164,16 @@ CREATE TABLE `phan_cong_hoc_sinh` (
   `id_hoc_sinh` int(11) DEFAULT NULL,
   `id_tuyen_duong` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `phan_cong_hoc_sinh`
+--
+
+INSERT INTO `phan_cong_hoc_sinh` (`id_phan_cong`, `id_hoc_sinh`, `id_tuyen_duong`) VALUES
+(1, 1, 1),
+(2, 2, 1),
+(3, 3, 2),
+(4, 4, 2);
 
 -- --------------------------------------------------------
 
@@ -128,6 +191,14 @@ CREATE TABLE `thong_bao` (
   `noi_dung` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Đang đổ dữ liệu cho bảng `thong_bao`
+--
+
+INSERT INTO `thong_bao` (`id_thong_bao`, `id_nguoi_nhan`, `id_nguoi_gui`, `da_xem`, `thoi_gian`, `tieu_de`, `noi_dung`) VALUES
+(1, 2, 1, 0, '2025-10-16 17:00:00', 'Thông báo nghỉ lễ', 'Học sinh được nghỉ lễ vào ngày 30/10/2025.'),
+(2, 3, 5, 1, '2025-10-17 06:50:00', 'Xe đến trễ', 'Xe buýt tuyến Bình Thạnh dự kiến đến trễ 10 phút.');
+
 -- --------------------------------------------------------
 
 --
@@ -139,8 +210,18 @@ CREATE TABLE `tuyen_duong` (
   `ten_tuyen_duong` varchar(100) NOT NULL,
   `quang_duong` int(11) NOT NULL,
   `thoi_gian_du_kien` int(11) DEFAULT NULL,
-  `mo_ta` text DEFAULT NULL
+  `mo_ta` text DEFAULT NULL,
+  `isDelete` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `tuyen_duong`
+--
+
+INSERT INTO `tuyen_duong` (`id_tuyen_duong`, `ten_tuyen_duong`, `quang_duong`, `thoi_gian_du_kien`, `mo_ta`, `isDelete`) VALUES
+(1, 'Tuyến Quận 1', 18800, 47, 'Tuyến qua trung tâm Quận 1, Quận 5.', 0),
+(2, 'Tuyến Bình Thạnh', 13200, 41, 'Tuyến đi qua khu vực Bình Thạnh, Landmark 81.', 0),
+(3, 'Đường Nam Kỳ Khởi Nghĩa', 8939, 26, 'Qua trường THPT Nam Kỳ', 0);
 
 -- --------------------------------------------------------
 
@@ -154,6 +235,21 @@ CREATE TABLE `tuyen_duong_diem_dung` (
   `id_tuyen_duong` int(11) DEFAULT NULL,
   `thu_tu_diem_dung` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `tuyen_duong_diem_dung`
+--
+
+INSERT INTO `tuyen_duong_diem_dung` (`id_tuyen_duong_diem_dung`, `id_diem_dung`, `id_tuyen_duong`, `thu_tu_diem_dung`) VALUES
+(1, 0, 1, 1),
+(2, 4, 1, 2),
+(3, 1, 1, 3),
+(4, 0, 2, 1),
+(5, 6, 2, 2),
+(6, 1, 2, 3),
+(7, 0, 3, 1),
+(8, 3, 3, 2),
+(9, 1, 3, 3);
 
 -- --------------------------------------------------------
 
@@ -171,6 +267,14 @@ CREATE TABLE `xe_buyt` (
   `kinh_do_hien_tai` decimal(11,8) DEFAULT NULL,
   `lan_cap_nhat_cuoi` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `xe_buyt`
+--
+
+INSERT INTO `xe_buyt` (`id_xe_buyt`, `bien_so_xe`, `so_ghe`, `hang`, `anh`, `vi_do_hien_tai`, `kinh_do_hien_tai`, `lan_cap_nhat_cuoi`) VALUES
+(1, '51B-123.45', 29, 'Hyundai', 'https://example.com/images/bus1.jpg', 10.77690000, 106.70090000, '2025-10-22 18:13:58'),
+(2, '51B-678.90', 16, 'Ford', 'https://example.com/images/bus2.jpg', 10.82310000, 106.62970000, '2025-10-22 18:13:58');
 
 --
 -- Chỉ mục cho các bảng đã đổ
@@ -262,61 +366,61 @@ ALTER TABLE `xe_buyt`
 -- AUTO_INCREMENT cho bảng `chuyen_di`
 --
 ALTER TABLE `chuyen_di`
-  MODIFY `id_chuyen_di` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_chuyen_di` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT cho bảng `diem_danh_chuyen_di`
 --
 ALTER TABLE `diem_danh_chuyen_di`
-  MODIFY `id_diem_danh` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_diem_danh` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT cho bảng `diem_dung`
 --
 ALTER TABLE `diem_dung`
-  MODIFY `id_diem_dung` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_diem_dung` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT cho bảng `hoc_sinh`
 --
 ALTER TABLE `hoc_sinh`
-  MODIFY `id_hoc_sinh` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_hoc_sinh` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT cho bảng `nguoi_dung`
 --
 ALTER TABLE `nguoi_dung`
-  MODIFY `id_nguoi_dung` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_nguoi_dung` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT cho bảng `phan_cong_hoc_sinh`
 --
 ALTER TABLE `phan_cong_hoc_sinh`
-  MODIFY `id_phan_cong` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_phan_cong` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT cho bảng `thong_bao`
 --
 ALTER TABLE `thong_bao`
-  MODIFY `id_thong_bao` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_thong_bao` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT cho bảng `tuyen_duong`
 --
 ALTER TABLE `tuyen_duong`
-  MODIFY `id_tuyen_duong` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_tuyen_duong` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT cho bảng `tuyen_duong_diem_dung`
 --
 ALTER TABLE `tuyen_duong_diem_dung`
-  MODIFY `id_tuyen_duong_diem_dung` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_tuyen_duong_diem_dung` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT cho bảng `xe_buyt`
 --
 ALTER TABLE `xe_buyt`
-  MODIFY `id_xe_buyt` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_xe_buyt` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- Các ràng buộc cho các bảng đã đổ
