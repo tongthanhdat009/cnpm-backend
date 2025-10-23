@@ -177,7 +177,7 @@ export class ChuyenDiService {
         const newStartTime = new Date(ngay); // 'ngay' đã là UTC Date
         newStartTime.setUTCHours(hours, minutes, seconds || 0, 0);
         const newEndTime = new Date(newStartTime.getTime() + thoiGianDuKienPhut * 60000);
-
+        
         // 3. Tìm các chuyến đi đã có (loại trừ chính nó nếu đang update)
         const existingTrips = await this.chuyenDiRepo.findActiveTripsByDate(
             id_tai_xe,
@@ -247,7 +247,6 @@ export class ChuyenDiService {
                 return { success: false, message: "Ngày kết thúc không được trước ngày bắt đầu" };
             }
 
-            // (SỬA) Lấy tên tuyến để trả về thông báo
             const tuyenDuong = await this.tuyenDuongRepo.getTuyenDuongById(id_tuyen_duong);
             if (!tuyenDuong || tuyenDuong.thoi_gian_du_kien == null) {
                 return { success: false, message: "Tuyến đường không hợp lệ hoặc chưa có thời gian dự kiến" };
@@ -345,18 +344,6 @@ export class ChuyenDiService {
                     };
                 }
             }
-            if (existingChuyenDi.trang_thai === 'dang_di' ) {
-                    // Cho phép sửa trạng thái nếu chỉ sửa trạng thái
-                if (Object.keys(data).length === 1 && (data.trang_thai === 'hoan_thanh' || data.trang_thai === 'da_huy')) {
-                    // Bỏ qua, cho phép sửa trạng thái
-                } else {
-                    return {
-                        success: false,
-                        message: `Không thể cập nhật thông tin chuyến đi đã ${existingChuyenDi.trang_thai}.`
-                    };
-                }
-            }
-           
             // 2. Chuẩn bị dữ liệu để kiểm tra conflict
             // Lấy giá trị mới HOẶC giá trị cũ nếu không có giá trị mới
             const checkData: ConflictCheckInput = {
