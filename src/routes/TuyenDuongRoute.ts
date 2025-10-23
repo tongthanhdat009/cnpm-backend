@@ -6,6 +6,10 @@ const tuyenDuongController = new TuyenDuongController();
 router.get("/", tuyenDuongController.getAll.bind(tuyenDuongController));
 router.get("/:id", tuyenDuongController.getTuyenDuongById.bind(tuyenDuongController));
 router.get("/:id/thoi-luong-du-kien", tuyenDuongController.getThoiLuongDuKien.bind(tuyenDuongController));
-router.post("/", TuyenDuongController.create);
+router.post("/", tuyenDuongController.create.bind(tuyenDuongController));
+router.delete("/:id", tuyenDuongController.delete.bind(tuyenDuongController));
+router.post("/:id/phan-cong-hoc-sinh/:hocSinhId", tuyenDuongController.assignStudent.bind(tuyenDuongController));
+router.delete("/:id/phan-cong-hoc-sinh/:hocSinhId", tuyenDuongController.unassignStudent.bind(tuyenDuongController));
+
 
 export default router;

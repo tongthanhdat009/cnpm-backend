@@ -147,12 +147,6 @@ model xe_buyt {
   chuyen_di         chuyen_di[]
 }
 
-enum diem_danh_chuyen_di_trang_thai {
-  da_don
-  da_tra
-  vang_mat
-}
-
 enum nguoi_dung_vai_tro {
   quan_ly
   phu_huynh
@@ -165,4 +159,11 @@ enum chuyen_di_trang_thai {
   hoan_thanh
   da_huy
   bi_tre
+}
+
+enum diem_danh_chuyen_di_trang_thai {
+  da_don
+  da_tra
+  vang_mat
+  chua_don
 }

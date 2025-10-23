@@ -29,6 +29,16 @@ export class DiemDungController {
       res.status(500).json({ message: 'Lỗi server khi lấy điểm dừng' });
     }
   }
+
+  async getUnassignedCounts(req: Request, res: Response) {
+    try {
+      const data = await DiemDungService.getUnassignedStudentCounts();
+      res.json(data);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Lỗi server khi lấy số lượng học sinh chưa phân công' });
+    }
+  }
 }
 
 export default new DiemDungController();

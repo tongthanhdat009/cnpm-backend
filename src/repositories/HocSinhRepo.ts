@@ -2,23 +2,14 @@ import prisma from '../prisma/client';
 
 export class HocSinhRepo {
   async getAll() {
+
     const data = await prisma.hoc_sinh.findMany({
-      select: {
-        id_hoc_sinh: true,
-        id_phu_huynh: true,
-        id_diem_dung: true,
-        ho_ten: true,
-        lop: true,
-        ghi_chu: true,
-        diem_dung: {
+      include: {
+        phan_cong_hoc_sinh: {
           select: {
-            id_diem_dung: true,
-            ten_diem_dung: true,
-            dia_chi: true,
-            vi_do: true,
-            kinh_do: true,
+            id_tuyen_duong: true,
           },
-        },
+        }
       },
       orderBy: { id_hoc_sinh: 'asc' },
     });

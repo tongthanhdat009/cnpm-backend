@@ -17,14 +17,12 @@ export class TuyenDuongService {
   }
 
   async create(data: any) {
-    // Chuẩn hóa input và kiểm tra tối thiểu 2 điểm dừng
+    // Prepare stops and validate input/business rules
     const stops = Array.isArray(data?.tuyen_duong_diem_dung)
       ? data.tuyen_duong_diem_dung
       : [];
 
-    if (stops.length < 3) {
-      throw new Error("Danh sách điểm dừng phải có ít nhất 3 điểm");
-    }
+    await this.validateTuyenDuong(data, stops);
 
     // Gọi repo tạo tuyến đường
     const result = await this.repo.create({
@@ -37,9 +35,37 @@ export class TuyenDuongService {
     return result;
   }
 
+  // Private validation helper
+  private async validateTuyenDuong(data: any, stops?: any[]) {
+    const s = Array.isArray(stops) ? stops : (Array.isArray(data?.tuyen_duong_diem_dung) ? data.tuyen_duong_diem_dung : []);
+
+    if (s.length < 3) {
+      throw new Error("Danh sách điểm dừng phải có ít nhất 3 điểm");
+    }
+    if (data.ten_tuyen_duong == null || data.ten_tuyen_duong.trim() === "") {
+      throw new Error("Tên tuyến đường không được để trống");
+    }
+    if (await this.repo.checkNameExists(data.ten_tuyen_duong)) {
+      throw new Error("Tên tuyến đường đã tồn tại");
+    }
+  }
+
   async getTuyenDuongById(id: number) {
     const result = await this.repo.getTuyenDuongById(id);
     return result;
+  }
+
+  async deleteTuyenDuong(id_tuyen_duong: number) {
+    const result = await this.repo.deleteTuyenDuong(id_tuyen_duong);
+    return result;
+  }
+
+  async assignHocSinhToTuyen(id_tuyen_duong: number, id_hoc_sinh: number) {
+    return await this.repo.assignHocSinhToTuyen(id_tuyen_duong, id_hoc_sinh);
+    }
+
+  async removeHocSinhFromTuyen(id_tuyen_duong: number, id_hoc_sinh: number) {
+    return await this.repo.removeHocSinhFromTuyen(id_tuyen_duong, id_hoc_sinh);
   }
 
   /**

@@ -12,6 +12,11 @@ export class DiemDungService {
     const data = await this.repo.getById(id);
     return data;
   }
+
+  async getUnassignedStudentCounts() {
+    const data = await this.repo.getUnassignedStudentCounts();
+    return data;
+  }
 }
 
 export default new DiemDungService();
