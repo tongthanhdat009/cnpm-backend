@@ -113,6 +113,99 @@ async getAll() {
     });
   }
 
+  async update(data: {
+    id_tuyen_duong: number;
+    ten_tuyen_duong?: string;
+    quang_duong?: number;
+    thoi_gian_du_kien?: number | null;
+    mo_ta?: string | null;
+    diem_dung_ids?: number[];
+  }) {
+    const id = data.id_tuyen_duong;
+
+    return await prisma.$transaction(async (tx) => {
+      const tuyen = await tx.tuyen_duong.findUnique({ where: { id_tuyen_duong: id } });
+      if (!tuyen) return { type: 'not_found' as const };
+
+      // Update core fields
+      await tx.tuyen_duong.update({
+        where: { id_tuyen_duong: id },
+        data: {
+          ten_tuyen_duong: data.ten_tuyen_duong ?? tuyen.ten_tuyen_duong,
+          quang_duong: data.quang_duong ?? tuyen.quang_duong,
+          thoi_gian_du_kien: data.thoi_gian_du_kien ?? tuyen.thoi_gian_du_kien,
+          mo_ta: data.mo_ta ?? tuyen.mo_ta,
+        },
+      });
+
+      // If diem_dung_ids provided, replace stops
+      if (Array.isArray(data.diem_dung_ids)) {
+        // Determine which stops are being removed so we can clean up student assignments
+        const existingStops = await tx.tuyen_duong_diem_dung.findMany({
+          where: { id_tuyen_duong: id },
+          select: { id_diem_dung: true },
+        });
+        const existingIds = existingStops.map(s => s.id_diem_dung).filter((v): v is number => v != null);
+        const newIds = data.diem_dung_ids || [];
+        const removedIds = existingIds.filter(eid => !newIds.includes(eid));
+
+        if (removedIds.length > 0) {
+          // Find students who belong to removed stations
+          const students = await tx.hoc_sinh.findMany({
+            where: { id_diem_dung: { in: removedIds } },
+            select: { id_hoc_sinh: true },
+          });
+          const studentIds = students.map(s => s.id_hoc_sinh).filter((v): v is number => v != null);
+
+          if (studentIds.length > 0) {
+            // Delete assignments of those students for this route
+            await tx.phan_cong_hoc_sinh.deleteMany({
+              where: { id_tuyen_duong: id, id_hoc_sinh: { in: studentIds } },
+            });
+
+            // Also delete attendance records (diem_danh_chuyen_di) for those students
+            // on trips that belong to this route and are still 'cho_khoi_hanh' (not started)
+            const trips = await tx.chuyen_di.findMany({
+              where: { id_tuyen_duong: id, trang_thai: 'cho_khoi_hanh' },
+              select: { id_chuyen_di: true },
+            });
+            const tripIds = trips.map(t => t.id_chuyen_di).filter((v): v is number => v != null);
+
+            if (tripIds.length > 0) {
+              await tx.diem_danh_chuyen_di.deleteMany({
+                where: {
+                  id_hoc_sinh: { in: studentIds },
+                  id_chuyen_di: { in: tripIds },
+                },
+              });
+            }
+          }
+        }
+
+        // remove existing stops
+        await tx.tuyen_duong_diem_dung.deleteMany({ where: { id_tuyen_duong: id } });
+
+        if (data.diem_dung_ids.length > 0) {
+          const creates = data.diem_dung_ids.map((id_diem, idx) => ({
+            id_tuyen_duong: id,
+            id_diem_dung: id_diem,
+            thu_tu_diem_dung: idx + 1,
+          }));
+
+          // createMany for performance
+          await tx.tuyen_duong_diem_dung.createMany({ data: creates });
+        }
+      }
+
+      const updated = await tx.tuyen_duong.findUnique({
+        where: { id_tuyen_duong: id },
+        include: { tuyen_duong_diem_dung: true },
+      });
+
+      return { type: 'updated' as const, record: updated };
+    });
+  }
+
   // Kiểm tra xem tuyến đường đã được tham chiếu bởi ít nhất 1 chuyen_di hay chưa
   async isTuyenDuongUsed(id_tuyen_duong: number): Promise<boolean> {
     const count = await prisma.chuyen_di.count({

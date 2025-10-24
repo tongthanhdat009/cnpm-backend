@@ -62,6 +62,23 @@ export class TuyenDuongController {
     }
   }
 
+  async update(req: Request, res: Response) {
+    if (!req.params.id) return res.status(400).json({ message: 'Thiếu tham số id' });
+    const id = parseInt(String(req.params.id), 10);
+    if (Number.isNaN(id)) return res.status(400).json({ message: 'ID không hợp lệ' });
+
+    try {
+      const payload = { ...req.body, id_tuyen_duong: id };
+      const result = await TuyenDuongService.update(payload);
+      if (result?.type === 'not_found') return res.status(404).json({ message: 'Không tìm thấy tuyến đường' });
+
+      return res.json({ message: 'Cập nhật tuyến thành công', data: result.record ?? result });
+    } catch (error: any) {
+      console.error(error);
+      return res.status(400).json({ message: error.message || 'Lỗi khi cập nhật tuyến đường' });
+    }
+  }
+
   async delete(req: Request, res: Response) {
     if (!req.params.id) {
       return res.status(400).json({ message: "Thiếu tham số id" });

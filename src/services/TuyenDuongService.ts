@@ -60,6 +60,46 @@ export class TuyenDuongService {
     return result;
   }
 
+  async update(data: any) {
+    const id = Number(data.id_tuyen_duong || data.id);
+    if (!id || Number.isNaN(id)) {
+      throw new Error('ID tuyến đường không hợp lệ');
+    }
+
+    // Check if route has been used
+    const used = await this.repo.isTuyenDuongUsed(id);
+    if (used) {
+      throw new Error('Tuyến đường đã được sử dụng, không thể cập nhật');
+    }
+
+    // If changing name, ensure uniqueness
+    if (data.ten_tuyen_duong) {
+      // Get current record to compare name
+      const current = await this.repo.getTuyenDuongById(id);
+      if (current && current.ten_tuyen_duong !== data.ten_tuyen_duong) {
+        const exists = await this.repo.checkNameExists(data.ten_tuyen_duong);
+        if (exists) throw new Error('Tên tuyến đường đã tồn tại');
+      }
+    }
+
+    // Normalize diem_dung_ids -> tuyen_duong_diem_dung format if provided
+    const diemIds: number[] | undefined = Array.isArray(data.diem_dung_ids)
+      ? data.diem_dung_ids.map((v: any) => Number(v))
+      : undefined;
+
+    const payload = {
+      id_tuyen_duong: id,
+      ten_tuyen_duong: data.ten_tuyen_duong,
+      quang_duong: data.quang_duong,
+      thoi_gian_du_kien: data.thoi_gian_du_kien,
+      mo_ta: data.mo_ta ?? null,
+      diem_dung_ids: diemIds,
+    };
+
+    const updated = await this.repo.update(payload as any);
+    return updated;
+  }
+
   async assignHocSinhToTuyen(id_tuyen_duong: number, id_hoc_sinh: number) {
     return await this.repo.assignHocSinhToTuyen(id_tuyen_duong, id_hoc_sinh);
     }
