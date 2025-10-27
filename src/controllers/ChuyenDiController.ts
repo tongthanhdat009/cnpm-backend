@@ -123,6 +123,97 @@ export class ChuyenDiController {
             });
         }
     }
+
+    async createRecurringChuyenDi(req: Request, res: Response) {
+        try {
+            const data: any = req.body;
+
+            // Kiểm tra input cơ bản
+            if (!data.id_tai_xe || !data.id_tuyen_duong || !data.id_xe_buyt || 
+                !data.gio_khoi_hanh || !data.ngay_bat_dau || !data.ngay_ket_thuc ||
+                !data.lap_lai_cac_ngay || data.lap_lai_cac_ngay.length === 0) 
+            {
+                return res.status(400).json({
+                    success: false,
+                    message: "Thiếu thông tin bắt buộc (lái xe, tuyến, xe, giờ, ngày bắt đầu/kết thúc, ngày lặp lại)"
+                });
+            }
+            
+            const result = await this.service.createRecurringChuyenDi(data);
+
+            if (result.success) {
+                return res.status(201).json(result); // 201 Created
+            } else {
+                // Nếu là lỗi trùng lịch (conflict)
+                if (result.errors) {
+                    return res.status(409).json(result); // 409 Conflict
+                }
+                // Nếu là lỗi dữ liệu đầu vào
+                return res.status(400).json(result);
+            }
+
+        } catch (error: any) {
+            console.error("Error in createRecurringChuyenDi controller:", error);
+            return res.status(500).json({
+                success: false,
+                message: "Lỗi server khi tạo lịch trình",
+                error: error.message
+            });
+        }
+    }
+
+    /**
+     * PUT /api/v1/chuyen-di/:id
+     * Cập nhật chuyến đi
+     */
+    async updateChuyenDi(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const data: any = req.body;
+
+            if (!id) {
+                return res.status(400).json({ success: false, message: "Thiếu ID chuyến đi" });
+            }
+
+            const idNumber = parseInt(id);
+            if (isNaN(idNumber)) {
+                return res.status(400).json({ success: false, message: "ID chuyến đi không hợp lệ" });
+            }
+            
+            // (SỬA) Kiểm tra nếu body rỗng
+            if (Object.keys(data).length === 0) {
+                 return res.status(400).json({
+                    success: false,
+                    message: "Không có dữ liệu nào được gửi để cập nhật."
+                });
+            }
+
+            const result = await this.service.updateChuyenDi(idNumber, data);
+
+            if (result.success) {
+                return res.status(200).json(result);
+            } else {
+                // (SỬA) Xử lý lỗi trùng lịch
+                if ('errors' in result && result.errors) {
+                    return res.status(409).json(result); // 409 Conflict
+                }
+                // (SỬA) Xử lý lỗi không tìm thấy
+                if (result.message && result.message.includes("Không tìm thấy")) {
+                    return res.status(404).json(result); // 404 Not Found
+                }
+                // Các lỗi 400 khác (ví dụ: không thể sửa chuyến đã hoàn thành)
+                return res.status(400).json(result);
+            }
+            
+        } catch (error: any) {
+            console.error("Error in updateChuyenDi controller:", error);
+            return res.status(500).json({
+                success: false,
+                message: "Lỗi server khi cập nhật chuyến đi",
+                error: error.message
+            });
+        }
+    }
 }
 
 export default new ChuyenDiController();
