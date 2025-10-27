@@ -243,6 +243,13 @@ export class ChuyenDiService {
             const startDate = new Date(ngay_bat_dau + 'T00:00:00Z');
             const endDate = new Date(ngay_ket_thuc + 'T23:59:59Z');
 
+            const now = new Date();
+
+            const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
+            if (startDate < todayUTC) {
+                return { success: false, message: "Ngày bắt đầu phải từ ngày hiện tại trở đi" };
+            }
+
             if (endDate < startDate) {
                 return { success: false, message: "Ngày kết thúc không được trước ngày bắt đầu" };
             }
@@ -277,6 +284,13 @@ export class ChuyenDiService {
                         const [h, m, s] = gio_khoi_hanh.split(':').map(Number);
                         const newStartTime = new Date(ngayChuyenDi);
                         newStartTime.setUTCHours(h, m, s || 0, 0);
+
+                        const isToday = ngayChuyenDi.toISOString().split('T')[0] === todayUTC.toISOString().split('T')[0];
+
+                        if (isToday && newStartTime < now) {
+                            console.warn(`Bỏ qua tạo chuyến ngày ${ngayChuyenDi.toISOString().split('T')[0]} lúc ${gio_khoi_hanh} vì đã qua giờ hiện tại.`);
+                            continue;
+                        }
 
                         tripsToCreate.push({
                             id_tai_xe: id_tai_xe,
@@ -379,7 +393,18 @@ export class ChuyenDiService {
                 const newStartTime = new Date(checkData.ngay);
                 const [hours = 0, minutes = 0, seconds = 0] = checkData.gio_khoi_hanh_str.split(':').map(Number);
                 newStartTime.setUTCHours(hours, minutes, seconds, 0);
+                const now = new Date(); // Lấy thời gian hiện tại
                 
+                // Chỉ kiểm tra nếu chuyến đi CHƯA bắt đầu ('cho_khoi_hanh' hoặc 'bi_tre')
+                if ((existingChuyenDi.trang_thai === 'cho_khoi_hanh' || existingChuyenDi.trang_thai === 'bi_tre') &&
+                    newStartTime < now)
+                {
+                    return {
+                        success: false,
+                        message: "Không thể dời lịch chuyến đi về một thời điểm trong quá khứ."
+                    };
+                }
+
                 updateData.ngay = newStartTime;
                 updateData.gio_khoi_hanh = newStartTime;
             }
