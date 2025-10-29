@@ -66,11 +66,15 @@ export class ThongBaoService {
 
     async getThongBaoByIdNguoiDung(id: number) {
         try {
-            // Sử dụng findMany thay vì findUnique
             const thongBaos = await prisma.thong_bao.findMany({
-                where: { id_nguoi_nhan: id },
+                where: {
+                    OR: [
+                        { id_nguoi_nhan: { equals: id } },
+                        { id_nguoi_nhan: { equals: null } }
+                    ]
+                },
                 include: {
-                    nguoi_dung_thong_bao_id_nguoi_guiTonguoi_dung: { select: { ho_ten: true } },
+                    nguoi_dung_thong_bao_id_nguoi_guiTonguoi_dung: { select: { ho_ten: true, vai_tro: true } },
                 },
                 orderBy: {
                     thoi_gian: 'desc' 

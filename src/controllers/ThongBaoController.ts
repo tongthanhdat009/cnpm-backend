@@ -59,7 +59,7 @@ export class ThongBaoController {
                 return res.status(400).json({ success: false, message: "ID người dùng không hợp lệ" });
             }
     
-            const result = await thongBaoService.getAllThongBao(idNguoiDung); 
+            const result = await thongBaoService.getThongBaoByIdNguoiDung(idNguoiDung); 
     
             if (result.success) {
                 return res.status(200).json(result);
