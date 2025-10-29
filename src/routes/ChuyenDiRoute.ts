@@ -11,4 +11,6 @@ router.post("/", chuyenDiController.createRecurringChuyenDi.bind(chuyenDiControl
 
 router.put("/:id", chuyenDiController.updateChuyenDi.bind(chuyenDiController));
 
+router.delete("/:id", chuyenDiController.deleteChuyenDi.bind(chuyenDiController));
+
 export default router;

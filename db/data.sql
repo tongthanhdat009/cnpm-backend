@@ -31,6 +31,7 @@ INSERT INTO `xe_buyt` (`id_xe_buyt`, `bien_so_xe`, `so_ghe`, `hang`, `anh`, `vi_
 
 -- 3. Bảng diem_dung (Stops)
 INSERT INTO `diem_dung` (`id_diem_dung`, `ten_diem_dung`, `dia_chi`, `vi_do`, `kinh_do`) VALUES
+(0, 'Đại học sài gòn', 'An Dương Vương, phường 2, Quận 5, TP.HCM', 10.760676570555919, 106.68242830954644),
 (1, 'Đại học sài gòn', 'An Dương Vương, phường 2, Quận 5, TP.HCM', 10.760676570555919, 106.68242830954644),
 (2, 'Công viên Lê Văn Tám', 'Đ. Hai Bà Trưng, Đa Kao, Quận 1, TP.HCM', 10.7898, 106.6923),
 (3, 'THPT nam kì khởi nghĩa', 'Đ. 3 tháng 2, Phường 16, Quận 11, TP.HCM', 10.758623274085513, 106.65055088549472),

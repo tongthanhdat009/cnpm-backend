@@ -214,6 +214,32 @@ export class ChuyenDiController {
             });
         }
     }
+
+    async deleteChuyenDi(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            if (!id) {
+                return res.status(400).json({ success: false, message: "Thiếu ID chuyến đi" });
+            }
+            const idNumber = parseInt(id);
+            if (isNaN(idNumber)) {
+                return res.status(400).json({ success: false, message: "ID chuyến đi không hợp lệ" });
+            }
+            const result = await this.service.deleteChuyenDi(idNumber);
+            if (result.success) {
+                return res.status(200).json(result);
+            } else {
+                return res.status(404).json(result);
+            }
+        } catch (error: any) {
+            console.error("Error in deleteChuyenDi controller:", error);
+            return res.status(500).json({
+                success: false,
+                message: "Lỗi server khi xóa chuyến đi",
+                error: error.message
+            });
+        }
+    }
 }
 
 export default new ChuyenDiController();

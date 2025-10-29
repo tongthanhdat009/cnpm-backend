@@ -431,4 +431,34 @@ export class ChuyenDiService {
             };
         }
     }
+    async deleteChuyenDi(id: number) {
+        try {
+            const existingChuyenDi = await this.chuyenDiRepo.getChuyenDiById(id);
+            if (!existingChuyenDi) {
+                return {
+                    success: false,
+                    message: `Không tìm thấy chuyến đi với ID ${id}`
+                };
+            }
+            
+            if (existingChuyenDi.trang_thai === 'dang_di' || existingChuyenDi.trang_thai === 'hoan_thanh') {
+                return {
+                    success: false,
+                    message: `Không thể xóa chuyến đi đang diễn ra hoặc đã hoàn thành.`
+                };
+            }
+
+            await this.chuyenDiRepo.deleteChuyenDi(id);
+            return {
+                success: true,
+                message: "Xóa chuyến đi thành công"
+            };
+        } catch (error: any) {
+            return {
+                success: false,
+                message: "Lỗi khi xóa chuyến đi",
+                error: error.message
+            };
+        }
+    }
 }
