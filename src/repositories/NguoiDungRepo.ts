@@ -34,17 +34,25 @@ export class NguoiDungRepository {
         });
     }
     async getNguoiDungByVaiTro(vaiTro: nguoi_dung_vai_tro) {
-        return await prisma.nguoi_dung.findMany({
-            where: { vai_tro: vaiTro },
-            select: {
-                id_nguoi_dung: true,
-                ho_ten: true,
-                ten_tai_khoan: true,
-                so_dien_thoai: true,
-                vai_tro: true,
-                ngay_tao: true,
-            }
-        });
+        try {
+            console.debug('[NguoiDungRepo] getNguoiDungByVaiTro request:', { vaiTro });
+            const results = await prisma.nguoi_dung.findMany({
+                where: { vai_tro: vaiTro },
+                select: {
+                    id_nguoi_dung: true,
+                    ho_ten: true,
+                    ten_tai_khoan: true,
+                    so_dien_thoai: true,
+                    vai_tro: true,
+                    ngay_tao: true,
+                }
+            });
+            console.debug('[NguoiDungRepo] getNguoiDungByVaiTro resultCount:', results?.length ?? 0);
+            return results;
+        } catch (err: any) {
+            console.error('[NguoiDungRepo] getNguoiDungByVaiTro error:', err?.message ?? err);
+            throw err;
+        }
     }
 }
 
