@@ -120,6 +120,18 @@ export class ChuyenDiRepository {
     }
 
     /**
+     * Chuyển tất cả chuyến đi của một tài xế sang tài xế khác
+     * @param oldTaiXeId - id tài xế cũ
+     * @param newTaiXeId - id tài xế thay thế
+     */
+    async reassignChuyenDiTaiXe(oldTaiXeId: number, newTaiXeId: number) {
+        return await prisma.chuyen_di.updateMany({
+            where: { id_tai_xe: oldTaiXeId },
+            data: { id_tai_xe: newTaiXeId }
+        });
+    }
+
+    /**
      * Lấy chuyến đi theo tuyến đường
      * @param idTuyenDuong - ID của tuyến đường
      * @returns Danh sách chuyến đi
