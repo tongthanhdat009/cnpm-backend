@@ -18,7 +18,7 @@ export class AuthRepository {
   /**
    * Tìm người dùng theo tên tài khoản
    */
-  async findUserByUsername(ten_tai_khoan: string): Promise<nguoi_dung | null> {
+  async findUserByUsername(ten_tai_khoan: string): Promise<any | null> {
     return await prisma.nguoi_dung.findUnique({
       where: { ten_tai_khoan },
       select: {
@@ -36,7 +36,7 @@ export class AuthRepository {
   /**
    * Tìm người dùng theo ID
    */
-  async findUserById(id_nguoi_dung: number): Promise<nguoi_dung | null> {
+  async findUserById(id_nguoi_dung: number): Promise<any | null> {
     return await prisma.nguoi_dung.findUnique({
       where: { id_nguoi_dung },
       select: {
@@ -70,6 +70,23 @@ export class AuthRepository {
       select: { id_nguoi_dung: true },
     });
     return user !== null;
+  }
+
+  /**
+   * Tìm người dùng theo số điện thoại
+   */
+  async findUserByPhone(so_dien_thoai: string): Promise<any | null> {
+    return await prisma.nguoi_dung.findUnique({
+      where: { so_dien_thoai },
+      select: {
+        id_nguoi_dung: true,
+        ho_ten: true,
+        ten_tai_khoan: true,
+        vai_tro: true,
+        so_dien_thoai: true,
+        ngay_tao: true,
+      },
+    });
   }
 
   /**
@@ -115,6 +132,46 @@ export class AuthRepository {
       orderBy: {
         ngay_tao: 'desc',
       },
+    });
+  }
+
+  /**
+   * Cập nhật người dùng theo id
+   */
+  async updateUser(id_nguoi_dung: number, data: Partial<CreateUserData & { mat_khau_bam?: string }>) {
+    // Build update payload only with provided fields to avoid sending undefined to Prisma
+    const updatePayload: any = {};
+    if (data.ho_ten !== undefined) updatePayload.ho_ten = data.ho_ten;
+    if (data.ten_tai_khoan !== undefined) updatePayload.ten_tai_khoan = data.ten_tai_khoan;
+    if (data.mat_khau_bam !== undefined) updatePayload.mat_khau_bam = data.mat_khau_bam;
+    if (data.so_dien_thoai !== undefined) updatePayload.so_dien_thoai = data.so_dien_thoai ?? null;
+
+    try {
+      console.debug('[AuthRepo] updateUser id, payload =>', { id_nguoi_dung, updatePayload });
+      return await prisma.nguoi_dung.update({
+        where: { id_nguoi_dung },
+        data: updatePayload,
+        select: {
+          id_nguoi_dung: true,
+          ho_ten: true,
+          ten_tai_khoan: true,
+          vai_tro: true,
+          so_dien_thoai: true,
+          ngay_tao: true,
+        },
+      });
+    } catch (err: any) {
+      console.error('[AuthRepo] updateUser error:', err?.message ?? err, err?.code ?? 'no-code');
+      throw err;
+    }
+  }
+
+  /**
+   * Xóa người dùng
+   */
+  async deleteUser(id_nguoi_dung: number) {
+    return await prisma.nguoi_dung.delete({
+      where: { id_nguoi_dung },
     });
   }
 }
