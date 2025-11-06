@@ -461,4 +461,50 @@ export class ChuyenDiService {
             };
         }
     }
+
+    /**
+     * Cập nhật trạng thái chuyến đi. Nếu đặt về 'hoan_thanh', tự động đổi các điểm danh 'da_don' => 'da_tra'.
+     */
+    async updateTrangThai(id: number, trang_thai: 'cho_khoi_hanh' | 'dang_di' | 'hoan_thanh' | 'da_huy' | 'bi_tre') {
+        try {
+            const allowed = ['cho_khoi_hanh', 'dang_di', 'hoan_thanh', 'da_huy', 'bi_tre'] as const;
+            if (!allowed.includes(trang_thai)) {
+                return { success: false, message: 'Trạng thái không hợp lệ' };
+            }
+
+            // Kiểm tra tồn tại và trạng thái hiện tại
+            const existing = await this.chuyenDiRepo.getChuyenDiById(id);
+            if (!existing) {
+                return { success: false, message: `Không tìm thấy chuyến đi với ID ${id}` };
+            }
+
+            // Ràng buộc hoàn thành: chỉ cho phép từ 'dang_di' -> 'hoan_thanh'
+            if (trang_thai === 'hoan_thanh') {
+                if (existing.trang_thai !== 'dang_di') {
+                    return { success: false, message: "Chỉ có thể hoàn thành chuyến đang ở trạng thái 'dang_di'." };
+                }
+                // Không cho hoàn thành nếu còn bất kỳ điểm danh 'chua_don'
+                const hasChuaDon = await this.chuyenDiRepo.hasChuaDonAttendance(id);
+                if (hasChuaDon) {
+                    return { success: false, message: "Không thể hoàn thành: còn học sinh ở trạng thái 'chua_don'." };
+                }
+            }
+
+            const result = await this.chuyenDiRepo.updateTrangThai(id, trang_thai);
+            if (!result) {
+                return { success: false, message: `Không tìm thấy chuyến đi với ID ${id}` };
+            }
+
+            return {
+                success: true,
+                message: 'Cập nhật trạng thái chuyến đi thành công',
+                data: {
+                    chuyen_di: result.updatedTrip,
+                    autoUpdatedAttendance: result.updatedAttendanceCount,
+                },
+            };
+        } catch (error: any) {
+            return { success: false, message: 'Lỗi khi cập nhật trạng thái chuyến đi', error: error.message };
+        }
+    }
 }

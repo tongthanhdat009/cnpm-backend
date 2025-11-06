@@ -313,4 +313,42 @@ export class ChuyenDiRepository {
             where: { id_chuyen_di: id }
         });
     }
+
+    /** Kiểm tra chuyến có bản ghi điểm danh nào đang ở trạng thái 'chua_don' không */
+    async hasChuaDonAttendance(id_chuyen_di: number) {
+        const count = await prisma.diem_danh_chuyen_di.count({
+            where: { id_chuyen_di, trang_thai: 'chua_don' }
+        });
+        return count > 0;
+    }
+
+    /**
+     * Cập nhật trạng thái chuyến đi; nếu chuyển sang 'hoan_thanh' thì tự động set
+     * tất cả điểm danh của chuyến đó từ 'da_don' -> 'da_tra'.
+     */
+    async updateTrangThai(
+        id: number,
+        trang_thai: 'cho_khoi_hanh' | 'dang_di' | 'hoan_thanh' | 'da_huy' | 'bi_tre'
+    ) {
+        return await prisma.$transaction(async (tx) => {
+            const existed = await tx.chuyen_di.findUnique({ where: { id_chuyen_di: id } });
+            if (!existed) return null;
+
+            const updatedTrip = await tx.chuyen_di.update({
+                where: { id_chuyen_di: id },
+                data: { trang_thai },
+            });
+
+            let updatedAttendanceCount = 0;
+            if (trang_thai === 'hoan_thanh') {
+                const result = await tx.diem_danh_chuyen_di.updateMany({
+                    where: { id_chuyen_di: id, trang_thai: 'da_don' },
+                    data: { trang_thai: 'da_tra' },
+                });
+                updatedAttendanceCount = result.count;
+            }
+
+            return { updatedTrip, updatedAttendanceCount };
+        });
+    }
 }

@@ -240,6 +240,31 @@ export class ChuyenDiController {
             });
         }
     }
+
+    /**
+     * PATCH /api/v1/chuyen-di/:id/trang-thai
+     * Cập nhật trạng thái chuyến đi; nếu chuyển sang 'hoan_thanh' -> auto đổi điểm danh 'da_don' => 'da_tra'
+     */
+    async updateTrangThai(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const { trang_thai } = req.body as { trang_thai?: string };
+
+            if (!id) return res.status(400).json({ success: false, message: 'Thiếu ID chuyến đi' });
+            const idNumber = parseInt(String(id), 10);
+            if (Number.isNaN(idNumber)) return res.status(400).json({ success: false, message: 'ID chuyến đi không hợp lệ' });
+            if (!trang_thai) return res.status(400).json({ success: false, message: 'Thiếu trường trang_thai' });
+
+            const result = await this.service.updateTrangThai(idNumber, trang_thai as any);
+            if (!result.success && result.message?.includes('Không tìm thấy')) {
+                return res.status(404).json(result);
+            }
+            return res.status(result.success ? 200 : 400).json(result);
+        } catch (error: any) {
+            console.error('Error in updateTrangThai controller:', error);
+            return res.status(500).json({ success: false, message: 'Lỗi server khi cập nhật trạng thái chuyến đi', error: error.message });
+        }
+    }
 }
 
 export default new ChuyenDiController();

@@ -11,6 +11,9 @@ router.post("/", chuyenDiController.createRecurringChuyenDi.bind(chuyenDiControl
 
 router.put("/:id", chuyenDiController.updateChuyenDi.bind(chuyenDiController));
 
+// Cập nhật trạng thái chuyến đi
+router.patch("/:id/trang-thai", chuyenDiController.updateTrangThai.bind(chuyenDiController));
+
 router.delete("/:id", chuyenDiController.deleteChuyenDi.bind(chuyenDiController));
 
 export default router;
