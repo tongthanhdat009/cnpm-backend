@@ -5,6 +5,8 @@ const router = Router();
 
 router.get("/", chuyenDiController.getAllChuyenDi.bind(chuyenDiController));
 
+router.get("/hoc-sinh/:idHocSinh", chuyenDiController.getChuyenDiByHocSinh.bind(chuyenDiController));
+
 router.get("/:id", chuyenDiController.getChuyenDiById.bind(chuyenDiController));
 
 router.post("/", chuyenDiController.createRecurringChuyenDi.bind(chuyenDiController));

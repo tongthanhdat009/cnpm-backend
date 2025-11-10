@@ -12,6 +12,11 @@ export class HocSinhService {
     const data = await this.repo.getById(id);
     return data;
   }
+
+  async getByPhuHuynh(idPhuHuynh: number) {
+    const data = await this.repo.getByPhuHuynh(idPhuHuynh);
+    return data;
+  }
 }
 
 export default new HocSinhService();

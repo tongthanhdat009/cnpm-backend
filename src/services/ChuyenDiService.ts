@@ -154,6 +154,27 @@ export class ChuyenDiService {
             };
         }
     }
+
+    /**
+     * Lấy danh sách chuyến đi của một học sinh
+     */
+    async getChuyenDiByHocSinh(idHocSinh: number) {
+        try {
+            const chuyenDis = await this.chuyenDiRepo.getChuyenDiByHocSinh(idHocSinh);
+            return {
+                success: true,
+                message: "Lấy danh sách chuyến đi của học sinh thành công",
+                data: chuyenDis,
+                total: chuyenDis.length
+            };
+        } catch (error: any) {
+            return {
+                success: false,
+                message: "Lỗi khi lấy danh sách chuyến đi của học sinh",
+                error: error.message
+            };
+        }
+    }
     
     // kiểm tra trùng lịch
     private async checkScheduleConflict(

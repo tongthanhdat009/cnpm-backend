@@ -124,6 +124,47 @@ export class ChuyenDiController {
         }
     }
 
+    /**
+     * GET /api/v1/chuyen-di/hoc-sinh/:idHocSinh
+     * Lấy danh sách chuyến đi của một học sinh
+     */
+    async getChuyenDiByHocSinh(req: Request, res: Response) {
+        try {
+            const { idHocSinh } = req.params;
+            
+            if (!idHocSinh) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Thiếu ID học sinh"
+                });
+            }
+            
+            const idNumber = parseInt(idHocSinh);
+
+            if (isNaN(idNumber)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "ID học sinh không hợp lệ"
+                });
+            }
+
+            const result = await this.service.getChuyenDiByHocSinh(idNumber);
+
+            if (result.success) {
+                return res.status(200).json(result);
+            } else {
+                return res.status(404).json(result);
+            }
+        } catch (error: any) {
+            console.error("Error in getChuyenDiByHocSinh controller:", error);
+            return res.status(500).json({
+                success: false,
+                message: "Lỗi server khi lấy danh sách chuyến đi của học sinh",
+                error: error.message
+            });
+        }
+    }
+
     async createRecurringChuyenDi(req: Request, res: Response) {
         try {
             const data: any = req.body;

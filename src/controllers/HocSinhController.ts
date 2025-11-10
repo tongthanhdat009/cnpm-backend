@@ -27,6 +27,21 @@ export class HocSinhController {
       res.status(500).json({ message: 'Lỗi server khi lấy học sinh' });
     }
   }
+
+  async getByPhuHuynh(req: Request, res: Response) {
+    const idParam = req.params.idPhuHuynh;
+    if (!idParam) return res.status(400).json({ message: 'Thiếu tham số idPhuHuynh' });
+    const idPhuHuynh = parseInt(idParam as string, 10);
+    if (Number.isNaN(idPhuHuynh)) return res.status(400).json({ message: 'Tham số idPhuHuynh không hợp lệ' });
+
+    try {
+      const data = await HocSinhService.getByPhuHuynh(idPhuHuynh);
+      res.json(data);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Lỗi server khi lấy danh sách học sinh theo phụ huynh' });
+    }
+  }
 }
 
 export default new HocSinhController();

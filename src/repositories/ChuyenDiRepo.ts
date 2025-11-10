@@ -224,6 +224,82 @@ export class ChuyenDiRepository {
     }
 
     /**
+     * Lấy danh sách chuyến đi của một học sinh
+     * @param idHocSinh - ID của học sinh
+     * @returns Danh sách chuyến đi có học sinh này
+     */
+    async getChuyenDiByHocSinh(idHocSinh: number) {
+        return await prisma.chuyen_di.findMany({
+            where: {
+                diem_danh_chuyen_di: {
+                    some: {
+                        id_hoc_sinh: idHocSinh
+                    }
+                }
+            },
+            include: {
+                nguoi_dung: {
+                    select: {
+                        id_nguoi_dung: true,
+                        ho_ten: true,
+                        so_dien_thoai: true,
+                        vai_tro: true
+                    }
+                },
+                tuyen_duong: {
+                    select: {
+                        id_tuyen_duong: true,
+                        ten_tuyen_duong: true,
+                        mo_ta: true,
+                        tuyen_duong_diem_dung: {
+                            include: {
+                                diem_dung: true
+                            },
+                            orderBy: {
+                                thu_tu_diem_dung: 'asc'
+                            }
+                        }
+                    }
+                },
+                xe_buyt: {
+                    select: {
+                        id_xe_buyt: true,
+                        bien_so_xe: true,
+                        so_ghe: true,
+                        hang: true,
+                        vi_do_hien_tai: true,
+                        kinh_do_hien_tai: true,
+                        lan_cap_nhat_cuoi: true
+                    }
+                },
+                diem_danh_chuyen_di: {
+                    include: {
+                        hoc_sinh: {
+                            select: {
+                                id_hoc_sinh: true,
+                                ho_ten: true,
+                                lop: true
+                            }
+                        },
+                        diem_dung: {
+                            select: {
+                                id_diem_dung: true,
+                                ten_diem_dung: true,
+                                dia_chi: true,
+                                vi_do: true,
+                                kinh_do: true
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: {
+                ngay: 'desc'
+            }
+        });
+    }
+
+    /**
      * Tìm các chuyến đi đã được phân công cho tài xế HOẶC xe buýt
      * trong một ngày cụ thể, và không ở trạng thái "da_huy".
      * @param id_tai_xe ID tài xế
