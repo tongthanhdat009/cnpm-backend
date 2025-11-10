@@ -18,9 +18,9 @@ model chuyen_di {
   trang_thai                 chuyen_di_trang_thai? @default(cho_khoi_hanh)
   thoi_gian_bat_dau_thuc_te  DateTime?             @db.DateTime(0)
   thoi_gian_ket_thuc_thuc_te DateTime?             @db.DateTime(0)
-  tuyen_duong                tuyen_duong?          @relation(fields: [id_tuyen_duong], references: [id_tuyen_duong], onDelete: Restrict, onUpdate: Restrict, map: "chuyen_di_ibfk_1")
-  xe_buyt                    xe_buyt?              @relation(fields: [id_xe_buyt], references: [id_xe_buyt], onDelete: Restrict, onUpdate: Restrict, map: "chuyen_di_ibfk_2")
-  nguoi_dung                 nguoi_dung?           @relation(fields: [id_tai_xe], references: [id_nguoi_dung], onDelete: Restrict, onUpdate: Restrict, map: "chuyen_di_ibfk_3")
+  tuyen_duong                tuyen_duong?          @relation(fields: [id_tuyen_duong], references: [id_tuyen_duong], onDelete: NoAction, onUpdate: NoAction, map: "chuyen_di_ibfk_1")
+  xe_buyt                    xe_buyt?              @relation(fields: [id_xe_buyt], references: [id_xe_buyt], onDelete: NoAction, onUpdate: NoAction, map: "chuyen_di_ibfk_2")
+  nguoi_dung                 nguoi_dung?           @relation(fields: [id_tai_xe], references: [id_nguoi_dung], onDelete: NoAction, onUpdate: NoAction, map: "chuyen_di_ibfk_3")
   diem_danh_chuyen_di        diem_danh_chuyen_di[]
 
   @@index([id_tai_xe], map: "id_tai_xe")
@@ -35,9 +35,9 @@ model diem_danh_chuyen_di {
   id_diem_dung Int?
   trang_thai   diem_danh_chuyen_di_trang_thai
   thoi_gian    DateTime                       @db.DateTime(0)
-  chuyen_di    chuyen_di?                     @relation(fields: [id_chuyen_di], references: [id_chuyen_di], onDelete: Cascade, onUpdate: Restrict, map: "diem_danh_chuyen_di_ibfk_1")
-  hoc_sinh     hoc_sinh?                      @relation(fields: [id_hoc_sinh], references: [id_hoc_sinh], onDelete: Restrict, onUpdate: Restrict, map: "diem_danh_chuyen_di_ibfk_2")
-  diem_dung    diem_dung?                     @relation(fields: [id_diem_dung], references: [id_diem_dung], onDelete: Cascade, onUpdate: Restrict, map: "diem_danh_chuyen_di_ibfk_3")
+  chuyen_di    chuyen_di?                     @relation(fields: [id_chuyen_di], references: [id_chuyen_di], onDelete: Cascade, onUpdate: NoAction, map: "diem_danh_chuyen_di_ibfk_1")
+  hoc_sinh     hoc_sinh?                      @relation(fields: [id_hoc_sinh], references: [id_hoc_sinh], onDelete: NoAction, onUpdate: NoAction, map: "diem_danh_chuyen_di_ibfk_2")
+  diem_dung    diem_dung?                     @relation(fields: [id_diem_dung], references: [id_diem_dung], onDelete: Cascade, onUpdate: NoAction, map: "diem_danh_chuyen_di_ibfk_3")
 
   @@index([id_chuyen_di], map: "id_chuyen_di")
   @@index([id_diem_dung], map: "id_diem_dung")
@@ -63,8 +63,8 @@ model hoc_sinh {
   lop                 String?               @db.VarChar(10)
   ghi_chu             String?               @db.Text
   diem_danh_chuyen_di diem_danh_chuyen_di[]
-  nguoi_dung          nguoi_dung?           @relation(fields: [id_phu_huynh], references: [id_nguoi_dung], onUpdate: Restrict, map: "hoc_sinh_ibfk_1")
-  diem_dung           diem_dung?            @relation(fields: [id_diem_dung], references: [id_diem_dung], onDelete: Cascade, onUpdate: Restrict, map: "hoc_sinh_ibfk_2")
+  nguoi_dung          nguoi_dung?           @relation(fields: [id_phu_huynh], references: [id_nguoi_dung], onUpdate: NoAction, map: "hoc_sinh_ibfk_1")
+  diem_dung           diem_dung?            @relation(fields: [id_diem_dung], references: [id_diem_dung], onDelete: Cascade, onUpdate: NoAction, map: "hoc_sinh_ibfk_2")
   phan_cong_hoc_sinh  phan_cong_hoc_sinh[]
 
   @@index([id_diem_dung], map: "id_diem_dung")
@@ -89,8 +89,8 @@ model phan_cong_hoc_sinh {
   id_phan_cong   Int          @id @default(autoincrement())
   id_hoc_sinh    Int?
   id_tuyen_duong Int?
-  hoc_sinh       hoc_sinh?    @relation(fields: [id_hoc_sinh], references: [id_hoc_sinh], onDelete: Cascade, onUpdate: Restrict, map: "phan_cong_hoc_sinh_ibfk_1")
-  tuyen_duong    tuyen_duong? @relation(fields: [id_tuyen_duong], references: [id_tuyen_duong], onDelete: Cascade, onUpdate: Restrict, map: "phan_cong_hoc_sinh_ibfk_2")
+  hoc_sinh       hoc_sinh?    @relation(fields: [id_hoc_sinh], references: [id_hoc_sinh], onDelete: Cascade, onUpdate: NoAction, map: "phan_cong_hoc_sinh_ibfk_1")
+  tuyen_duong    tuyen_duong? @relation(fields: [id_tuyen_duong], references: [id_tuyen_duong], onDelete: Cascade, onUpdate: NoAction, map: "phan_cong_hoc_sinh_ibfk_2")
 
   @@index([id_hoc_sinh], map: "id_hoc_sinh")
   @@index([id_tuyen_duong], map: "id_tuyen_duong")
@@ -103,9 +103,9 @@ model thong_bao {
   da_xem                                         Boolean?
   thoi_gian                                      DateTime?   @db.DateTime(0)
   tieu_de                                        String      @db.VarChar(100)
-  noi_dung                                       String      @db.VarChar(255)
-  nguoi_dung_thong_bao_id_nguoi_guiTonguoi_dung  nguoi_dung? @relation("thong_bao_id_nguoi_guiTonguoi_dung", fields: [id_nguoi_gui], references: [id_nguoi_dung], onDelete: Restrict, onUpdate: Restrict, map: "thong_bao_ibfk_1")
-  nguoi_dung_thong_bao_id_nguoi_nhanTonguoi_dung nguoi_dung? @relation("thong_bao_id_nguoi_nhanTonguoi_dung", fields: [id_nguoi_nhan], references: [id_nguoi_dung], onDelete: Restrict, onUpdate: Restrict, map: "thong_bao_ibfk_2")
+  noi_dung                                       String      @unique(map: "noi_dung") @db.VarChar(255)
+  nguoi_dung_thong_bao_id_nguoi_guiTonguoi_dung  nguoi_dung? @relation("thong_bao_id_nguoi_guiTonguoi_dung", fields: [id_nguoi_gui], references: [id_nguoi_dung], onDelete: NoAction, onUpdate: NoAction, map: "thong_bao_ibfk_1")
+  nguoi_dung_thong_bao_id_nguoi_nhanTonguoi_dung nguoi_dung? @relation("thong_bao_id_nguoi_nhanTonguoi_dung", fields: [id_nguoi_nhan], references: [id_nguoi_dung], onDelete: NoAction, onUpdate: NoAction, map: "thong_bao_ibfk_2")
 
   @@index([id_nguoi_gui], map: "id_nguoi_gui")
   @@index([id_nguoi_nhan], map: "id_nguoi_nhan")
@@ -128,8 +128,8 @@ model tuyen_duong_diem_dung {
   id_diem_dung             Int?
   id_tuyen_duong           Int?
   thu_tu_diem_dung         Int
-  tuyen_duong              tuyen_duong? @relation(fields: [id_tuyen_duong], references: [id_tuyen_duong], onDelete: Cascade, onUpdate: Restrict, map: "tuyen_duong_diem_dung_ibfk_1")
-  diem_dung                diem_dung?   @relation(fields: [id_diem_dung], references: [id_diem_dung], onDelete: Cascade, onUpdate: Restrict, map: "tuyen_duong_diem_dung_ibfk_2")
+  tuyen_duong              tuyen_duong? @relation(fields: [id_tuyen_duong], references: [id_tuyen_duong], onDelete: Cascade, onUpdate: NoAction, map: "tuyen_duong_diem_dung_ibfk_1")
+  diem_dung                diem_dung?   @relation(fields: [id_diem_dung], references: [id_diem_dung], onDelete: Cascade, onUpdate: NoAction, map: "tuyen_duong_diem_dung_ibfk_2")
 
   @@index([id_diem_dung], map: "id_diem_dung")
   @@index([id_tuyen_duong], map: "id_tuyen_duong")

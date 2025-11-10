@@ -15,6 +15,8 @@ import hocSinhRoute from './routes/HocSinhRoute';
 import thongBaoRoute from './routes/ThongBaoRoute'; // Thêm route cho thông báo
 import diemDanhRoute from './routes/DiemDanhRoute';
 import taiXeRoute from './routes/TaiXeRoute';
+import busTrackingRoute from './routes/BusTrackingRoute'; // Thêm route cho bus tracking
+
 const app: Application = express();
 const PORT = process.env.PORT || 3000;
 
@@ -34,6 +36,8 @@ app.use('/api/v1/hoc-sinh', hocSinhRoute);
 app.use('/api/v1/thong-bao', thongBaoRoute); // Sử dụng route thông báo
 app.use('/api/v1/diem-danh', diemDanhRoute);
 app.use('/api/v1/tai-xe', taiXeRoute); // Sử dụng route tài xế
+app.use('/api/v1/bus-tracking', busTrackingRoute); // Sử dụng route bus tracking
+
 // Health check
 app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'OK', message: 'Server is running' });
