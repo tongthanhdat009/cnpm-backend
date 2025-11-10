@@ -1,5 +1,6 @@
 import { Router } from "express";
 import BusTrackingController from "../controllers/BusTrackingController";
+import { getWebSocketStats } from "../websocket";
 
 const router = Router();
 
@@ -22,5 +23,23 @@ router.get("/trip/:id", (req, res) =>
 router.get("/student/:id/active-trips", (req, res) => 
     BusTrackingController.getActiveTripsForStudent(req, res)
 );
+
+// GET /api/v1/bus-tracking/ws-stats - Monitoring WebSocket stats
+router.get("/ws-stats", (req, res) => {
+    try {
+        const stats = getWebSocketStats();
+        res.json({
+            success: true,
+            message: "WebSocket statistics",
+            data: stats
+        });
+    } catch (error: any) {
+        res.status(500).json({
+            success: false,
+            message: "Error getting WebSocket stats",
+            error: error.message
+        });
+    }
+});
 
 export default router;

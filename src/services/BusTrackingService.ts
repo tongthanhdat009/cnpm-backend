@@ -1,5 +1,5 @@
 import prisma from "../prisma/client";
-import { broadcastMessage, sendMessageToUsers } from "../websocket";
+import { broadcastToTripRoom } from "../websocket";
 
 export class BusTrackingService {
     /**
@@ -17,8 +17,8 @@ export class BusTrackingService {
                 }
             });
 
-            // Tìm chuyến đi đang hoạt động của xe này
-            const activeTrip = await prisma.chuyen_di.findFirst({
+            // Tìm TẤT CẢ các chuyến đi đang hoạt động của xe này
+            const activeTrips = await prisma.chuyen_di.findMany({
                 where: {
                     id_xe_buyt: idXeBuyt,
                     trang_thai: 'dang_di'
@@ -38,13 +38,8 @@ export class BusTrackingService {
                 }
             });
 
-            if (activeTrip) {
-                // Lấy danh sách ID phụ huynh cần nhận thông báo
-                const parentIds = activeTrip.diem_danh_chuyen_di
-                    .map(dd => dd.hoc_sinh?.id_phu_huynh)
-                    .filter((id): id is number => id !== null && id !== undefined);
-
-                // Broadcast vị trí xe đến phụ huynh có con trong chuyến đi
+            // 🚀 Broadcast vị trí cho từng chuyến đi - ROOM-BASED (Siêu nhanh!)
+            for (const activeTrip of activeTrips) {
                 const locationUpdate = {
                     type: 'bus_location_update',
                     data: {
@@ -58,13 +53,8 @@ export class BusTrackingService {
                     }
                 };
 
-                // Gửi đến các phụ huynh liên quan
-                if (parentIds.length > 0) {
-                    sendMessageToUsers(parentIds, locationUpdate);
-                }
-
-                // Broadcast cho tất cả (admin, tài xế)
-                broadcastMessage(locationUpdate);
+                // Chỉ gửi đến clients trong room của chuyến này - O(k) complexity
+                broadcastToTripRoom(activeTrip.id_chuyen_di, locationUpdate);
             }
 
             return {
@@ -75,7 +65,8 @@ export class BusTrackingService {
                     bien_so_xe: updatedBus.bien_so_xe,
                     vi_do: updatedBus.vi_do_hien_tai?.toString(),
                     kinh_do: updatedBus.kinh_do_hien_tai?.toString(),
-                    lan_cap_nhat_cuoi: updatedBus.lan_cap_nhat_cuoi
+                    lan_cap_nhat_cuoi: updatedBus.lan_cap_nhat_cuoi,
+                    active_trips_count: activeTrips.length
                 }
             };
         } catch (error: any) {
