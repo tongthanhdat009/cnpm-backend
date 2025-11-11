@@ -3,6 +3,7 @@ import { ChuyenDiRepository } from "../repositories/ChuyenDiRepo";
 import { TuyenDuongRepo } from "../repositories/TuyenDuongRepo";
 import { Prisma } from "@prisma/client"; // (MỚI) Import Prisma types
 import e from "express";
+import ThongBaoService from './ThongBaoService';
 
 interface ConflictCheckInput {
     id_tai_xe: number;
@@ -526,6 +527,84 @@ export class ChuyenDiService {
             };
         } catch (error: any) {
             return { success: false, message: 'Lỗi khi cập nhật trạng thái chuyến đi', error: error.message };
+        }
+    }
+
+    /**
+     * Gửi cảnh báo sự cố cho phụ huynh có con trong chuyến đi
+     */
+    async sendIncidentWarning(id: number, incidentData: { noi_dung: string }, senderId?: number) {
+        try {
+            // Lấy thông tin chuyến đi
+            const chuyenDi = await this.chuyenDiRepo.getChuyenDiById(id);
+            if (!chuyenDi) {
+                return { success: false, message: `Không tìm thấy chuyến đi với ID ${id}` };
+            }
+
+            // Lấy danh sách phụ huynh có con trong chuyến đi
+            const parentIds = await this.chuyenDiRepo.getParentIdsByTripId(id);
+            
+            if (parentIds.length === 0) {
+                return { success: false, message: 'Không có phụ huynh nào để gửi cảnh báo' };
+            }
+
+            // Import WebSocket service
+            const { sendMessageToUsers } = await import('../websocket');
+
+            const tieuDe = '⚠️ Cảnh báo sự cố';
+            const noiDung = `Chuyến đi ${chuyenDi.tuyen_duong?.ten_tuyen_duong || 'Không xác định'} (${chuyenDi.xe_buyt?.bien_so_xe || 'N/A'}): ${incidentData.noi_dung}`;
+
+            // Lưu thông báo cho từng phụ huynh vào database
+            const savePromises = parentIds.map(parentId => 
+                ThongBaoService.createThongBao({
+                    tieu_de: tieuDe,
+                    noi_dung: noiDung,
+                    nguoi_dung_thong_bao_id_nguoi_guiTonguoi_dung: senderId ? {
+                        connect: { id_nguoi_dung: senderId }
+                    } : undefined,
+                    nguoi_dung_thong_bao_id_nguoi_nhanTonguoi_dung: {
+                        connect: { id_nguoi_dung: parentId }
+                    },
+                    da_xem: false,
+                    thoi_gian: new Date()
+                })
+            );
+
+            await Promise.all(savePromises);
+
+            // Gửi WebSocket notification đến phụ huynh (realtime)
+            const message = {
+                type: 'incident_warning',
+                data: {
+                    id_chuyen_di: id,
+                    tieu_de: tieuDe,
+                    noi_dung: incidentData.noi_dung,
+                    ten_tuyen_duong: chuyenDi.tuyen_duong?.ten_tuyen_duong || 'Không xác định',
+                    bien_so_xe: chuyenDi.xe_buyt?.bien_so_xe || 'Không xác định',
+                    thoi_gian: new Date().toISOString(),
+                    loai_chuyen_di: chuyenDi.loai_chuyen_di
+                }
+            };
+
+            const sentCount = sendMessageToUsers(parentIds, message);
+
+            console.log(`📢 Đã gửi và lưu cảnh báo sự cố chuyến ${id} đến ${parentIds.length} phụ huynh (${sentCount} đang online)`);
+
+            return {
+                success: true,
+                message: `Đã gửi cảnh báo sự cố đến ${parentIds.length} phụ huynh`,
+                data: {
+                    parent_count: parentIds.length,
+                    sent_count: sentCount
+                }
+            };
+        } catch (error: any) {
+            console.error('Lỗi sendIncidentWarning:', error);
+            return {
+                success: false,
+                message: 'Lỗi khi gửi cảnh báo sự cố',
+                error: error.message
+            };
         }
     }
 }

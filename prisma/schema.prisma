@@ -103,7 +103,7 @@ model thong_bao {
   da_xem                                         Boolean?
   thoi_gian                                      DateTime?   @db.DateTime(0)
   tieu_de                                        String      @db.VarChar(100)
-  noi_dung                                       String      @unique(map: "noi_dung") @db.VarChar(255)
+  noi_dung                                       String      @db.VarChar(255)
   nguoi_dung_thong_bao_id_nguoi_guiTonguoi_dung  nguoi_dung? @relation("thong_bao_id_nguoi_guiTonguoi_dung", fields: [id_nguoi_gui], references: [id_nguoi_dung], onDelete: NoAction, onUpdate: NoAction, map: "thong_bao_ibfk_1")
   nguoi_dung_thong_bao_id_nguoi_nhanTonguoi_dung nguoi_dung? @relation("thong_bao_id_nguoi_nhanTonguoi_dung", fields: [id_nguoi_nhan], references: [id_nguoi_dung], onDelete: NoAction, onUpdate: NoAction, map: "thong_bao_ibfk_2")
 

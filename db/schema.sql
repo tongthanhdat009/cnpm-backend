@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th10 22, 2025 lúc 11:03 PM
+-- Thời gian đã tạo: Th10 29, 2025 lúc 08:08 AM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -46,9 +46,26 @@ CREATE TABLE `chuyen_di` (
 
 INSERT INTO `chuyen_di` (`id_chuyen_di`, `id_tai_xe`, `id_tuyen_duong`, `id_xe_buyt`, `loai_chuyen_di`, `gio_khoi_hanh`, `ngay`, `trang_thai`, `thoi_gian_bat_dau_thuc_te`, `thoi_gian_ket_thuc_thuc_te`) VALUES
 (1, 4, 2, 1, 'don_hoc_sinh', '06:30:00', '2025-10-17', 'hoan_thanh', '2025-10-17 06:32:00', '2025-10-17 07:15:00'),
-(2, 4, 2, 1, 'tra_hoc_sinh', '16:30:00', '2025-10-17', 'cho_khoi_hanh', NULL, NULL),
 (3, 5, 2, 2, 'don_hoc_sinh', '06:45:00', '2025-10-17', 'dang_di', '2025-10-17 06:45:00', NULL),
-(4, 5, 2, 2, 'tra_hoc_sinh', '16:45:00', '2025-10-17', 'da_huy', NULL, NULL);
+(4, 5, 1, 2, 'don_hoc_sinh', '16:45:00', '2025-10-17', 'cho_khoi_hanh', NULL, NULL),
+(5, 4, 13, 1, 'don', '23:44:00', '2025-10-28', 'hoan_thanh', NULL, NULL),
+(7, 4, 14, 1, 'don', '18:00:00', '2025-11-03', 'da_huy', NULL, NULL),
+(8, 4, 14, 1, 'don', '18:00:00', '2025-11-04', 'cho_khoi_hanh', NULL, NULL),
+(9, 4, 14, 1, 'don', '18:00:00', '2025-11-05', 'cho_khoi_hanh', NULL, NULL),
+(10, 4, 14, 1, 'don', '18:00:00', '2025-11-06', 'cho_khoi_hanh', NULL, NULL),
+(11, 4, 14, 1, 'don', '18:00:00', '2025-11-07', 'cho_khoi_hanh', NULL, NULL),
+(12, 4, 14, 1, 'don', '18:00:00', '2025-11-08', 'cho_khoi_hanh', NULL, NULL),
+(13, 4, 14, 1, 'don', '18:00:00', '2025-11-09', 'cho_khoi_hanh', NULL, NULL),
+(14, 4, 14, 1, 'don', '14:06:00', '2025-10-30', 'cho_khoi_hanh', NULL, NULL),
+(15, 4, 14, 1, 'don', '14:06:00', '2025-10-31', 'cho_khoi_hanh', NULL, NULL),
+(16, 4, 14, 1, 'don', '14:06:00', '2025-11-01', 'cho_khoi_hanh', NULL, NULL),
+(17, 4, 14, 1, 'don', '14:06:00', '2025-11-02', 'cho_khoi_hanh', NULL, NULL),
+(18, 4, 14, 1, 'don', '14:06:00', '2025-11-03', 'cho_khoi_hanh', NULL, NULL),
+(19, 4, 14, 1, 'don', '14:06:00', '2025-11-04', 'cho_khoi_hanh', NULL, NULL),
+(20, 4, 14, 1, 'don', '14:06:00', '2025-11-05', 'cho_khoi_hanh', NULL, NULL),
+(21, 4, 14, 1, 'don', '14:06:00', '2025-11-06', 'cho_khoi_hanh', NULL, NULL),
+(22, 4, 14, 1, 'don', '14:06:00', '2025-11-07', 'cho_khoi_hanh', NULL, NULL),
+(23, 4, 14, 1, 'don', '14:06:00', '2025-11-08', 'cho_khoi_hanh', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -61,7 +78,7 @@ CREATE TABLE `diem_danh_chuyen_di` (
   `id_hoc_sinh` int(11) DEFAULT NULL,
   `id_chuyen_di` int(11) DEFAULT NULL,
   `id_diem_dung` int(11) DEFAULT NULL,
-  `trang_thai` enum('da_don','da_tra','vang_mat') NOT NULL,
+  `trang_thai` enum('da_don','da_tra','vang_mat','chua_don') NOT NULL,
   `thoi_gian` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -70,9 +87,8 @@ CREATE TABLE `diem_danh_chuyen_di` (
 --
 
 INSERT INTO `diem_danh_chuyen_di` (`id_diem_danh`, `id_hoc_sinh`, `id_chuyen_di`, `id_diem_dung`, `trang_thai`, `thoi_gian`) VALUES
-(1, 1, 1, 2, 'da_don', '2025-10-17 06:45:10'),
-(2, 2, 1, 3, 'vang_mat', '2025-10-17 07:00:00'),
-(3, 3, 3, 5, 'da_don', '2025-10-17 07:05:30');
+(14, 2, 5, 2, 'da_don', '2025-10-28 15:45:08'),
+(31, 4, 7, 5, 'chua_don', '2025-10-28 15:51:14');
 
 -- --------------------------------------------------------
 
@@ -93,7 +109,7 @@ CREATE TABLE `diem_dung` (
 --
 
 INSERT INTO `diem_dung` (`id_diem_dung`, `ten_diem_dung`, `dia_chi`, `vi_do`, `kinh_do`) VALUES
-(0, 'Đại học Sài Gòn', ' An Dương Vương, P.2, Q.5, TP.HCM', 10.76067657, 106.68242831),
+(0, 'Đại học Sài Gòn', 'An Dương Vương, P.2, Q.5, TP.HCM', 10.76067657, 106.68242831),
 (1, 'Đại học Sài Gòn', 'An Dương Vương, P.2, Q.5, TP.HCM', 10.76067657, 106.68242831),
 (2, 'Công viên Lê Văn Tám', 'Hai Bà Trưng, Đa Kao, Q.1, TP.HCM', 10.78980000, 106.69230000),
 (3, 'THPT Nam Kỳ Khởi Nghĩa', 'Đ. 3/2, P.16, Q.11, TP.HCM', 10.75862327, 106.65055088),
@@ -121,10 +137,10 @@ CREATE TABLE `hoc_sinh` (
 --
 
 INSERT INTO `hoc_sinh` (`id_hoc_sinh`, `id_phu_huynh`, `id_diem_dung`, `ho_ten`, `lop`, `ghi_chu`) VALUES
-(1, 2, 2, 'Nguyễn Hoàng Gia An', '1A', 'Dị ứng với đậu phộng'),
-(2, 2, 3, 'Nguyễn Hoàng Gia Bảo', '3B', ''),
-(3, 3, 5, 'Lê Tuệ Nhi', '2C', ''),
-(4, 3, 6, 'Lê Tuấn Khang', '5A', 'Say xe nhẹ');
+(1, 2, 4, 'Nguyễn Hoàng Gia An', '1A', 'Dị ứng với đậu phộng'),
+(2, 2, 2, 'Nguyễn Hoàng Gia Bảo', '3B', ''),
+(3, 3, 4, 'Lê Tuệ Nhi', '2C', ''),
+(4, 3, 5, 'Lê Tuấn Khang', '5A', 'Say xe nhẹ');
 
 -- --------------------------------------------------------
 
@@ -170,10 +186,7 @@ CREATE TABLE `phan_cong_hoc_sinh` (
 --
 
 INSERT INTO `phan_cong_hoc_sinh` (`id_phan_cong`, `id_hoc_sinh`, `id_tuyen_duong`) VALUES
-(1, 1, 1),
-(2, 2, 1),
-(3, 3, 2),
-(4, 4, 2);
+(26, 2, 13);
 
 -- --------------------------------------------------------
 
@@ -219,9 +232,10 @@ CREATE TABLE `tuyen_duong` (
 --
 
 INSERT INTO `tuyen_duong` (`id_tuyen_duong`, `ten_tuyen_duong`, `quang_duong`, `thoi_gian_du_kien`, `mo_ta`, `isDelete`) VALUES
-(1, 'Tuyến Quận 1', 18800, 47, 'Tuyến qua trung tâm Quận 1, Quận 5.', 0),
+(1, 'Tuyến Quận 1 1', 9257, 31, 'Tuyến qua trung tâm Quận 1, Quận 5.', 0),
 (2, 'Tuyến Bình Thạnh', 13200, 41, 'Tuyến đi qua khu vực Bình Thạnh, Landmark 81.', 0),
-(3, 'Đường Nam Kỳ Khởi Nghĩa', 8939, 26, 'Qua trường THPT Nam Kỳ', 0);
+(13, 'Test*', 9257, 31, '123', 1),
+(14, 'Test', 33759, 104, '', 0);
 
 -- --------------------------------------------------------
 
@@ -241,15 +255,22 @@ CREATE TABLE `tuyen_duong_diem_dung` (
 --
 
 INSERT INTO `tuyen_duong_diem_dung` (`id_tuyen_duong_diem_dung`, `id_diem_dung`, `id_tuyen_duong`, `thu_tu_diem_dung`) VALUES
-(1, 0, 1, 1),
-(2, 4, 1, 2),
-(3, 1, 1, 3),
 (4, 0, 2, 1),
 (5, 6, 2, 2),
 (6, 1, 2, 3),
-(7, 0, 3, 1),
-(8, 3, 3, 2),
-(9, 1, 3, 3);
+(55, 0, 1, 1),
+(56, 2, 1, 2),
+(57, 1, 1, 3),
+(58, 0, 13, 1),
+(59, 2, 13, 2),
+(60, 1, 13, 3),
+(61, 0, 14, 1),
+(62, 2, 14, 2),
+(63, 3, 14, 3),
+(64, 4, 14, 4),
+(65, 5, 14, 5),
+(66, 6, 14, 6),
+(67, 1, 14, 7);
 
 -- --------------------------------------------------------
 
@@ -333,7 +354,6 @@ ALTER TABLE `phan_cong_hoc_sinh`
 --
 ALTER TABLE `thong_bao`
   ADD PRIMARY KEY (`id_thong_bao`),
-  ADD UNIQUE KEY `noi_dung` (`noi_dung`),
   ADD KEY `id_nguoi_gui` (`id_nguoi_gui`),
   ADD KEY `id_nguoi_nhan` (`id_nguoi_nhan`);
 
@@ -366,13 +386,13 @@ ALTER TABLE `xe_buyt`
 -- AUTO_INCREMENT cho bảng `chuyen_di`
 --
 ALTER TABLE `chuyen_di`
-  MODIFY `id_chuyen_di` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id_chuyen_di` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT cho bảng `diem_danh_chuyen_di`
 --
 ALTER TABLE `diem_danh_chuyen_di`
-  MODIFY `id_diem_danh` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id_diem_danh` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
 
 --
 -- AUTO_INCREMENT cho bảng `diem_dung`
@@ -396,7 +416,7 @@ ALTER TABLE `nguoi_dung`
 -- AUTO_INCREMENT cho bảng `phan_cong_hoc_sinh`
 --
 ALTER TABLE `phan_cong_hoc_sinh`
-  MODIFY `id_phan_cong` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id_phan_cong` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- AUTO_INCREMENT cho bảng `thong_bao`
@@ -408,13 +428,13 @@ ALTER TABLE `thong_bao`
 -- AUTO_INCREMENT cho bảng `tuyen_duong`
 --
 ALTER TABLE `tuyen_duong`
-  MODIFY `id_tuyen_duong` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id_tuyen_duong` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT cho bảng `tuyen_duong_diem_dung`
 --
 ALTER TABLE `tuyen_duong_diem_dung`
-  MODIFY `id_tuyen_duong_diem_dung` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id_tuyen_duong_diem_dung` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
 
 --
 -- AUTO_INCREMENT cho bảng `xe_buyt`

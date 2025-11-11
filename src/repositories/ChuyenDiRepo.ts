@@ -439,4 +439,29 @@ export class ChuyenDiRepository {
             return { updatedTrip, updatedAttendanceCount };
         });
     }
+
+    /**
+     * Lấy danh sách ID phụ huynh có con trong chuyến đi
+     * @param id_chuyen_di - ID của chuyến đi
+     * @returns Mảng các ID phụ huynh
+     */
+    async getParentIdsByTripId(id_chuyen_di: number): Promise<number[]> {
+        const attendances = await prisma.diem_danh_chuyen_di.findMany({
+            where: { id_chuyen_di },
+            include: {
+                hoc_sinh: {
+                    select: {
+                        id_phu_huynh: true // Đúng tên trường trong schema
+                    }
+                }
+            }
+        });
+
+        // Lọc và loại bỏ duplicate
+        const parentIds = attendances
+            .map(att => att.hoc_sinh?.id_phu_huynh)
+            .filter((id): id is number => id !== null && id !== undefined);
+
+        return [...new Set(parentIds)]; // Remove duplicates
+    }
 }

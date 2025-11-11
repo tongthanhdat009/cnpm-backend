@@ -9,7 +9,19 @@ export class DiemDanhRepo {
         id_diem_danh: true,
         id_chuyen_di: true,
         trang_thai: true,
-        chuyen_di: { select: { id_chuyen_di: true, trang_thai: true } },
+        chuyen_di: { 
+          select: { 
+            id_chuyen_di: true, 
+            trang_thai: true,
+            loai_chuyen_di: true,
+            id_tai_xe: true,
+            tuyen_duong: {
+              select: {
+                ten_tuyen_duong: true
+              }
+            }
+          } 
+        },
       },
     });
   }
@@ -22,6 +34,27 @@ export class DiemDanhRepo {
     const updated = await prisma.diem_danh_chuyen_di.update({
       where: { id_diem_danh },
       data: { trang_thai },
+      include: {
+        hoc_sinh: {
+          select: {
+            id_hoc_sinh: true,
+            ho_ten: true,
+            id_phu_huynh: true
+          }
+        },
+        chuyen_di: {
+          select: {
+            id_chuyen_di: true,
+            id_tai_xe: true,
+            loai_chuyen_di: true,
+            tuyen_duong: {
+              select: {
+                ten_tuyen_duong: true
+              }
+            }
+          }
+        }
+      }
     });
 
     return updated;

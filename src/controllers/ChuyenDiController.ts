@@ -306,6 +306,48 @@ export class ChuyenDiController {
             return res.status(500).json({ success: false, message: 'Lỗi server khi cập nhật trạng thái chuyến đi', error: error.message });
         }
     }
+
+    /**
+     * POST /api/v1/chuyen-di/:id/incident-warning
+     * Gửi cảnh báo sự cố cho phụ huynh có con trong chuyến đi
+     */
+    async sendIncidentWarning(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const incidentData = req.body;
+
+            if (!id) {
+                return res.status(400).json({ success: false, message: 'Thiếu ID chuyến đi' });
+            }
+
+            const idNumber = parseInt(id);
+            if (isNaN(idNumber)) {
+                return res.status(400).json({ success: false, message: 'ID chuyến đi không hợp lệ' });
+            }
+
+            if (!incidentData.noi_dung || !incidentData.noi_dung.trim()) {
+                return res.status(400).json({ success: false, message: 'Thiếu nội dung cảnh báo' });
+            }
+
+            // Lấy ID người gửi từ body hoặc từ session/token nếu có middleware auth
+            const senderId = incidentData.id_nguoi_gui || req.body.senderId;
+
+            const result = await this.service.sendIncidentWarning(idNumber, incidentData, senderId);
+
+            if (result.success) {
+                return res.status(200).json(result);
+            } else {
+                return res.status(404).json(result);
+            }
+        } catch (error: any) {
+            console.error('Error in sendIncidentWarning controller:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Lỗi server khi gửi cảnh báo sự cố',
+                error: error.message
+            });
+        }
+    }
 }
 
 export default new ChuyenDiController();
