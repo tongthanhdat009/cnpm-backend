@@ -4,6 +4,7 @@ import { TuyenDuongRepo } from "../repositories/TuyenDuongRepo";
 import { Prisma } from "@prisma/client"; // (MỚI) Import Prisma types
 import e from "express";
 import ThongBaoService from './ThongBaoService';
+import { getVietnamTime } from '../utils/timezone';
 
 interface ConflictCheckInput {
     id_tai_xe: number;
@@ -283,6 +284,7 @@ export class ChuyenDiService {
             
             const tripsToCreate = [];
             const conflicts = [];
+            const createdTrips = [];
 
             for (let day = new Date(startDate); day <= endDate; day.setUTCDate(day.getUTCDate() + 1)) {
                 const dayOfWeek = day.getUTCDay();
@@ -290,19 +292,17 @@ export class ChuyenDiService {
                 if (lap_lai_cac_ngay.includes(dayOfWeek)) {
                     const ngayChuyenDi = new Date(day); 
                     
-                    // (SỬA) Gọi hàm helper để kiểm tra
                     const conflictCheck = await this.checkScheduleConflict({
                         id_tai_xe: id_tai_xe,
                         id_xe_buyt: id_xe_buyt,
                         id_tuyen_duong: id_tuyen_duong,
                         ngay: ngayChuyenDi,
                         gio_khoi_hanh_str: gio_khoi_hanh
-                    }, null); // null vì đang tạo mới
+                    }, null);
 
                     if (!conflictCheck.success) {
                         conflicts.push(conflictCheck.errors ? conflictCheck.errors[0] : { ngay: ngayChuyenDi, reason: conflictCheck.message });
                     } else {
-                        // (SỬA) Tạo newStartTime ở đây để lưu vào DB
                         const [h, m, s] = gio_khoi_hanh.split(':').map(Number);
                         const newStartTime = new Date(ngayChuyenDi);
                         newStartTime.setUTCHours(h, m, s || 0, 0);
@@ -335,12 +335,23 @@ export class ChuyenDiService {
                 return { success: false, message: "Không có chuyến đi nào được tạo. Vui lòng kiểm tra lại ngày." };
             }
 
-            const result = await this.chuyenDiRepo.createManyChuyenDi(tripsToCreate);
+            // Tạo từng chuyến đi và tự động tạo điểm danh cho học sinh
+            for (const tripData of tripsToCreate) {
+                try {
+                    const createdTrip = await this.chuyenDiRepo.createChuyenDiWithAttendance(tripData);
+                    createdTrips.push(createdTrip);
+                } catch (error: any) {
+                    console.error(`Lỗi khi tạo chuyến đi ngày ${tripData.ngay}:`, error);
+                }
+            }
 
             return {
                 success: true,
-                message: `Tạo thành công ${result.count} chuyến đi cho tuyến "${tuyenDuong.ten_tuyen_duong}"`,
-                data: result
+                message: `Tạo thành công ${createdTrips.length} chuyến đi cho tuyến "${tuyenDuong.ten_tuyen_duong}" với điểm danh học sinh`,
+                data: {
+                    count: createdTrips.length,
+                    trips: createdTrips
+                }
             };
 
         } catch (error: any) {

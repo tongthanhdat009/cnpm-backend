@@ -358,6 +358,93 @@ export class ChuyenDiRepository {
     }
 
     /**
+     * Tạo một chuyến đi và tự động tạo điểm danh cho các học sinh trong tuyến
+     * @param tripData Dữ liệu chuyến đi
+     * @returns Chuyến đi đã tạo với thông tin điểm danh
+     */
+    async createChuyenDiWithAttendance(tripData: any) {
+        return await prisma.$transaction(async (tx) => {
+            // 1. Tạo chuyến đi
+            const newChuyenDi = await tx.chuyen_di.create({
+                data: tripData
+            });
+
+            // 2. Lấy danh sách học sinh được phân công vào tuyến đường này
+            const studentsAssigned = await tx.phan_cong_hoc_sinh.findMany({
+                where: {
+                    id_tuyen_duong: tripData.id_tuyen_duong
+                },
+                include: {
+                    hoc_sinh: {
+                        select: {
+                            id_hoc_sinh: true,
+                            id_diem_dung: true
+                        }
+                    }
+                }
+            });
+
+            // 3. Tạo bản ghi điểm danh cho từng học sinh
+            if (studentsAssigned.length > 0) {
+                const attendanceRecords = studentsAssigned.map(assignment => ({
+                    id_chuyen_di: newChuyenDi.id_chuyen_di,
+                    id_hoc_sinh: assignment.id_hoc_sinh,
+                    id_diem_dung: assignment.hoc_sinh?.id_diem_dung,
+                    trang_thai: 'chua_don' as any,
+                    thoi_gian: new Date()
+                }));
+
+                await tx.diem_danh_chuyen_di.createMany({
+                    data: attendanceRecords
+                });
+            }
+
+            // 4. Trả về chuyến đi với thông tin đầy đủ
+            return await tx.chuyen_di.findUnique({
+                where: { id_chuyen_di: newChuyenDi.id_chuyen_di },
+                include: {
+                    nguoi_dung: {
+                        select: {
+                            id_nguoi_dung: true,
+                            ho_ten: true,
+                            so_dien_thoai: true
+                        }
+                    },
+                    tuyen_duong: {
+                        select: {
+                            id_tuyen_duong: true,
+                            ten_tuyen_duong: true
+                        }
+                    },
+                    xe_buyt: {
+                        select: {
+                            id_xe_buyt: true,
+                            bien_so_xe: true
+                        }
+                    },
+                    diem_danh_chuyen_di: {
+                        include: {
+                            hoc_sinh: {
+                                select: {
+                                    id_hoc_sinh: true,
+                                    ho_ten: true,
+                                    lop: true
+                                }
+                            },
+                            diem_dung: {
+                                select: {
+                                    id_diem_dung: true,
+                                    ten_diem_dung: true
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    }
+
+    /**
      * Cập nhật chuyến đi
      * @param id - ID của chuyến đi
      * @param data - Dữ liệu cập nhật

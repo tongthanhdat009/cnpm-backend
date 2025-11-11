@@ -2,6 +2,7 @@
 import prisma from '../prisma/client';
 import { broadcastMessage, sendMessageToUser } from '../websocket';
 import { Prisma } from '@prisma/client';
+import { getVietnamTime } from '../utils/timezone';
 
 export class ThongBaoService {
     async createThongBao(data: Prisma.thong_baoCreateInput) {
@@ -10,7 +11,7 @@ export class ThongBaoService {
             const newThongBao = await prisma.thong_bao.create({
                 data: {
                     ...data,
-                    thoi_gian: data.thoi_gian || new Date(), // Set thời gian nếu chưa có
+                    thoi_gian: data.thoi_gian || getVietnamTime(), // Sử dụng giờ Việt Nam
                     da_xem: data.da_xem ?? false // Mặc định là chưa xem
                 },
                 include: { // Lấy thêm thông tin người gửi/nhận nếu cần hiển thị ngay
