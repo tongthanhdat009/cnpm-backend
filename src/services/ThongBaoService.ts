@@ -88,6 +88,28 @@ export class ThongBaoService {
         }
     }
 
+    async markThongBaoAsSeen(id: number) {
+        try {
+            const updated = await prisma.thong_bao.update({
+                where: { id_thong_bao: id },
+                data: { da_xem: true }
+            });
+
+            // Optionally notify sender/recipient via websocket about the update
+            const wsMessage = { type: 'NOTIFICATION_UPDATED', payload: updated };
+            if (updated.id_nguoi_nhan) {
+                try { sendMessageToUser(updated.id_nguoi_nhan, wsMessage); } catch (e) { /* ignore */ }
+            } else {
+                try { broadcastMessage(wsMessage); } catch (e) { /* ignore */ }
+            }
+
+            return { success: true, data: updated };
+        } catch (error: any) {
+            console.error('Lỗi khi cập nhật trạng thái đã xem:', error);
+            return { success: false, message: 'Lỗi server khi cập nhật thông báo', error: error.message };
+        }
+    }
+
 }
 
 export default new ThongBaoService();

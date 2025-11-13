@@ -71,6 +71,25 @@ export class ThongBaoController {
             return res.status(500).json({ success: false, message: "Lỗi server", error: error.message });
         }
     }
+
+    async markAsSeen(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const idThongBao = parseInt(id as string);
+            if (isNaN(idThongBao)) {
+                return res.status(400).json({ success: false, message: 'ID thông báo không hợp lệ' });
+            }
+
+            const result = await thongBaoService.markThongBaoAsSeen(idThongBao);
+            if (result.success) {
+                return res.status(200).json(result);
+            }
+            return res.status(500).json(result);
+        } catch (error: any) {
+            console.error('Error in ThongBaoController markAsSeen:', error);
+            return res.status(500).json({ success: false, message: 'Lỗi server', error: error.message });
+        }
+    }
 }
 
 export default new ThongBaoController();

@@ -14,6 +14,8 @@ router.get('/', thongBaoController.getAll);
 
 // GET /api/v1/thong-bao/nguoi-nhan/:id_nguoi_nhan - Lấy thông báo theo ID người nhận
 router.get('/nguoi-nhan/:id_nguoi_nhan', thongBaoController.getByIdNguoiDung);
+// PATCH /api/v1/thong-bao/:id/seen - Đánh dấu thông báo đã xem
+router.patch('/:id/seen', thongBaoController.markAsSeen);
 // Các route khác: PUT /:id/read, DELETE /:id, ...
 
 export default router;
