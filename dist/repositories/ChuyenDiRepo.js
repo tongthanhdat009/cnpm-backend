@@ -1,0 +1,534 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ChuyenDiRepository = void 0;
+const client_1 = __importDefault(require("../prisma/client"));
+class ChuyenDiRepository {
+    /**
+     * Lấy tất cả chuyến đi với đầy đủ thông tin liên quan
+     * @returns Danh sách tất cả chuyến đi
+     */
+    async getAllChuyenDi() {
+        return await client_1.default.chuyen_di.findMany({
+            include: {
+                nguoi_dung: {
+                    select: {
+                        id_nguoi_dung: true,
+                        ho_ten: true,
+                        so_dien_thoai: true,
+                        vai_tro: true
+                    }
+                },
+                tuyen_duong: {
+                    select: {
+                        id_tuyen_duong: true,
+                        ten_tuyen_duong: true,
+                        mo_ta: true
+                    }
+                },
+                xe_buyt: {
+                    select: {
+                        id_xe_buyt: true,
+                        bien_so_xe: true,
+                        so_ghe: true,
+                        hang: true,
+                        vi_do_hien_tai: true,
+                        kinh_do_hien_tai: true
+                    }
+                },
+                diem_danh_chuyen_di: {
+                    include: {
+                        hoc_sinh: {
+                            select: {
+                                id_hoc_sinh: true,
+                                ho_ten: true,
+                                lop: true
+                            }
+                        },
+                        diem_dung: {
+                            select: {
+                                id_diem_dung: true,
+                                ten_diem_dung: true,
+                                dia_chi: true
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: {
+                ngay: 'desc'
+            }
+        });
+    }
+    /**
+     * Lấy chuyến đi theo ID
+     * @param id - ID của chuyến đi
+     * @returns Thông tin chuyến đi hoặc null
+     */
+    async getChuyenDiById(id) {
+        return await client_1.default.chuyen_di.findUnique({
+            where: { id_chuyen_di: id },
+            include: {
+                nguoi_dung: {
+                    select: {
+                        id_nguoi_dung: true,
+                        ho_ten: true,
+                        so_dien_thoai: true,
+                        vai_tro: true
+                    }
+                },
+                tuyen_duong: {
+                    select: {
+                        id_tuyen_duong: true,
+                        ten_tuyen_duong: true,
+                        mo_ta: true,
+                        tuyen_duong_diem_dung: {
+                            include: {
+                                diem_dung: true
+                            },
+                            orderBy: {
+                                thu_tu_diem_dung: 'asc'
+                            }
+                        }
+                    }
+                },
+                xe_buyt: true,
+                diem_danh_chuyen_di: {
+                    include: {
+                        hoc_sinh: true,
+                        diem_dung: true
+                    }
+                }
+            }
+        });
+    }
+    /**
+     * Lấy chuyến đi theo tài xế
+     * @param idTaiXe - ID của tài xế
+     * @returns Danh sách chuyến đi
+     */
+    async getChuyenDiByTaiXe(idTaiXe) {
+        return await client_1.default.chuyen_di.findMany({
+            where: { id_tai_xe: idTaiXe },
+            include: {
+                tuyen_duong: true,
+                xe_buyt: true
+            },
+            orderBy: {
+                ngay: 'desc'
+            }
+        });
+    }
+    /**
+     * Chuyển tất cả chuyến đi của một tài xế sang tài xế khác
+     * @param oldTaiXeId - id tài xế cũ
+     * @param newTaiXeId - id tài xế thay thế
+     */
+    async reassignChuyenDiTaiXe(oldTaiXeId, newTaiXeId) {
+        return await client_1.default.chuyen_di.updateMany({
+            where: { id_tai_xe: oldTaiXeId },
+            data: { id_tai_xe: newTaiXeId }
+        });
+    }
+    /**
+     * Lấy chuyến đi theo tuyến đường
+     * @param idTuyenDuong - ID của tuyến đường
+     * @returns Danh sách chuyến đi
+     */
+    async getChuyenDiByTuyenDuong(idTuyenDuong) {
+        return await client_1.default.chuyen_di.findMany({
+            where: { id_tuyen_duong: idTuyenDuong },
+            include: {
+                nguoi_dung: {
+                    select: {
+                        ho_ten: true,
+                        so_dien_thoai: true
+                    }
+                },
+                xe_buyt: {
+                    select: {
+                        bien_so_xe: true
+                    }
+                }
+            },
+            orderBy: {
+                ngay: 'desc'
+            }
+        });
+    }
+    /**
+     * Lấy chuyến đi theo ngày
+     * @param ngay - Ngày cần lọc (YYYY-MM-DD)
+     * @returns Danh sách chuyến đi
+     */
+    async getChuyenDiByNgay(ngay) {
+        return await client_1.default.chuyen_di.findMany({
+            where: {
+                ngay: ngay
+            },
+            include: {
+                nguoi_dung: {
+                    select: {
+                        ho_ten: true,
+                        so_dien_thoai: true
+                    }
+                },
+                tuyen_duong: {
+                    select: {
+                        ten_tuyen_duong: true
+                    }
+                },
+                xe_buyt: {
+                    select: {
+                        bien_so_xe: true
+                    }
+                }
+            },
+            orderBy: {
+                gio_khoi_hanh: 'asc'
+            }
+        });
+    }
+    /**
+     * Lấy chuyến đi theo trạng thái
+     * @param trangThai - Trạng thái chuyến đi
+     * @returns Danh sách chuyến đi
+     */
+    async getChuyenDiByTrangThai(trangThai) {
+        return await client_1.default.chuyen_di.findMany({
+            where: { trang_thai: trangThai },
+            include: {
+                nguoi_dung: {
+                    select: {
+                        ho_ten: true
+                    }
+                },
+                tuyen_duong: {
+                    select: {
+                        ten_tuyen_duong: true
+                    }
+                },
+                xe_buyt: {
+                    select: {
+                        bien_so_xe: true
+                    }
+                }
+            },
+            orderBy: {
+                ngay: 'desc'
+            }
+        });
+    }
+    /**
+     * Lấy danh sách chuyến đi của một học sinh
+     * @param idHocSinh - ID của học sinh
+     * @returns Danh sách chuyến đi có học sinh này
+     */
+    async getChuyenDiByHocSinh(idHocSinh) {
+        return await client_1.default.chuyen_di.findMany({
+            where: {
+                diem_danh_chuyen_di: {
+                    some: {
+                        id_hoc_sinh: idHocSinh
+                    }
+                }
+            },
+            include: {
+                nguoi_dung: {
+                    select: {
+                        id_nguoi_dung: true,
+                        ho_ten: true,
+                        so_dien_thoai: true,
+                        vai_tro: true
+                    }
+                },
+                tuyen_duong: {
+                    select: {
+                        id_tuyen_duong: true,
+                        ten_tuyen_duong: true,
+                        mo_ta: true,
+                        tuyen_duong_diem_dung: {
+                            include: {
+                                diem_dung: true
+                            },
+                            orderBy: {
+                                thu_tu_diem_dung: 'asc'
+                            }
+                        }
+                    }
+                },
+                xe_buyt: {
+                    select: {
+                        id_xe_buyt: true,
+                        bien_so_xe: true,
+                        so_ghe: true,
+                        hang: true,
+                        vi_do_hien_tai: true,
+                        kinh_do_hien_tai: true,
+                        lan_cap_nhat_cuoi: true
+                    }
+                },
+                diem_danh_chuyen_di: {
+                    include: {
+                        hoc_sinh: {
+                            select: {
+                                id_hoc_sinh: true,
+                                ho_ten: true,
+                                lop: true
+                            }
+                        },
+                        diem_dung: {
+                            select: {
+                                id_diem_dung: true,
+                                ten_diem_dung: true,
+                                dia_chi: true,
+                                vi_do: true,
+                                kinh_do: true
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: {
+                ngay: 'desc'
+            }
+        });
+    }
+    /**
+     * Tìm các chuyến đi đã được phân công cho tài xế HOẶC xe buýt
+     * trong một ngày cụ thể, và không ở trạng thái "da_huy".
+     * @param id_tai_xe ID tài xế
+     * @param id_xe_buyt ID xe buýt
+     * @param ngay Ngày cần kiểm tra (JS Date object)
+     * @returns Danh sách các chuyến đi có khả năng trùng lịch
+     */
+    async findActiveTripsByDate(id_tai_xe, id_xe_buyt, ngay, excludeChuyenDiId) {
+        return await client_1.default.chuyen_di.findMany({
+            where: {
+                ngay: ngay,
+                trang_thai: {
+                    not: 'da_huy',
+                },
+                OR: [
+                    { id_tai_xe: id_tai_xe },
+                    { id_xe_buyt: id_xe_buyt },
+                ],
+                id_chuyen_di: excludeChuyenDiId ? { not: excludeChuyenDiId } : undefined,
+            },
+            include: {
+                // Lấy thông tin tuyến đường để biết thời gian dự kiến
+                tuyen_duong: {
+                    select: {
+                        id_tuyen_duong: true,
+                        ten_tuyen_duong: true,
+                        thoi_gian_du_kien: true,
+                    },
+                },
+                nguoi_dung: {
+                    select: {
+                        id_nguoi_dung: true,
+                        ho_ten: true
+                    }
+                },
+                xe_buyt: {
+                    select: {
+                        id_xe_buyt: true,
+                        bien_so_xe: true
+                    }
+                }
+            },
+        });
+    }
+    /**
+     * Tạo nhiều chuyến đi cùng lúc
+     * @param tripsData Mảng dữ liệu các chuyến đi cần tạo
+     */
+    async createManyChuyenDi(tripsData) {
+        return await client_1.default.chuyen_di.createMany({
+            data: tripsData,
+            skipDuplicates: false, // Không bỏ qua nếu trùng (để báo lỗi nếu cần)
+        });
+    }
+    /**
+     * Tạo một chuyến đi và tự động tạo điểm danh cho các học sinh trong tuyến
+     * @param tripData Dữ liệu chuyến đi
+     * @returns Chuyến đi đã tạo với thông tin điểm danh
+     */
+    async createChuyenDiWithAttendance(tripData) {
+        return await client_1.default.$transaction(async (tx) => {
+            // 1. Tạo chuyến đi
+            const newChuyenDi = await tx.chuyen_di.create({
+                data: tripData
+            });
+            // 2. Lấy danh sách học sinh được phân công vào tuyến đường này
+            const studentsAssigned = await tx.phan_cong_hoc_sinh.findMany({
+                where: {
+                    id_tuyen_duong: tripData.id_tuyen_duong
+                },
+                include: {
+                    hoc_sinh: {
+                        select: {
+                            id_hoc_sinh: true,
+                            id_diem_dung: true
+                        }
+                    }
+                }
+            });
+            // 3. Tạo bản ghi điểm danh cho từng học sinh
+            if (studentsAssigned.length > 0) {
+                const attendanceRecords = studentsAssigned.map(assignment => ({
+                    id_chuyen_di: newChuyenDi.id_chuyen_di,
+                    id_hoc_sinh: assignment.id_hoc_sinh,
+                    id_diem_dung: assignment.hoc_sinh?.id_diem_dung,
+                    trang_thai: 'chua_don',
+                    thoi_gian: new Date()
+                }));
+                await tx.diem_danh_chuyen_di.createMany({
+                    data: attendanceRecords
+                });
+            }
+            // 4. Trả về chuyến đi với thông tin đầy đủ
+            return await tx.chuyen_di.findUnique({
+                where: { id_chuyen_di: newChuyenDi.id_chuyen_di },
+                include: {
+                    nguoi_dung: {
+                        select: {
+                            id_nguoi_dung: true,
+                            ho_ten: true,
+                            so_dien_thoai: true
+                        }
+                    },
+                    tuyen_duong: {
+                        select: {
+                            id_tuyen_duong: true,
+                            ten_tuyen_duong: true
+                        }
+                    },
+                    xe_buyt: {
+                        select: {
+                            id_xe_buyt: true,
+                            bien_so_xe: true
+                        }
+                    },
+                    diem_danh_chuyen_di: {
+                        include: {
+                            hoc_sinh: {
+                                select: {
+                                    id_hoc_sinh: true,
+                                    ho_ten: true,
+                                    lop: true
+                                }
+                            },
+                            diem_dung: {
+                                select: {
+                                    id_diem_dung: true,
+                                    ten_diem_dung: true
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    }
+    /**
+     * Cập nhật chuyến đi
+     * @param id - ID của chuyến đi
+     * @param data - Dữ liệu cập nhật
+     * @returns Chuyến đi đã cập nhật
+     */
+    async updateChuyenDi(id, data) {
+        return await client_1.default.chuyen_di.update({
+            where: { id_chuyen_di: id },
+            data: data,
+            include: {
+                nguoi_dung: {
+                    select: {
+                        id_nguoi_dung: true,
+                        ho_ten: true,
+                        so_dien_thoai: true
+                    }
+                },
+                tuyen_duong: {
+                    select: {
+                        id_tuyen_duong: true,
+                        ten_tuyen_duong: true
+                    }
+                },
+                xe_buyt: {
+                    select: {
+                        id_xe_buyt: true,
+                        bien_so_xe: true
+                    }
+                }
+            }
+        });
+    }
+    /**
+     * Xóa chuyến đi
+     * @param id - ID của chuyến đi
+     * @returns Kết quả xóa
+     */
+    async deleteChuyenDi(id) {
+        return await client_1.default.chuyen_di.delete({
+            where: { id_chuyen_di: id }
+        });
+    }
+    /** Kiểm tra chuyến có bản ghi điểm danh nào đang ở trạng thái 'chua_don' không */
+    async hasChuaDonAttendance(id_chuyen_di) {
+        const count = await client_1.default.diem_danh_chuyen_di.count({
+            where: { id_chuyen_di, trang_thai: 'chua_don' }
+        });
+        return count > 0;
+    }
+    /**
+     * Cập nhật trạng thái chuyến đi; nếu chuyển sang 'hoan_thanh' thì tự động set
+     * tất cả điểm danh của chuyến đó từ 'da_don' -> 'da_tra'.
+     */
+    async updateTrangThai(id, trang_thai) {
+        return await client_1.default.$transaction(async (tx) => {
+            const existed = await tx.chuyen_di.findUnique({ where: { id_chuyen_di: id } });
+            if (!existed)
+                return null;
+            const updatedTrip = await tx.chuyen_di.update({
+                where: { id_chuyen_di: id },
+                data: { trang_thai },
+            });
+            let updatedAttendanceCount = 0;
+            if (trang_thai === 'hoan_thanh') {
+                const result = await tx.diem_danh_chuyen_di.updateMany({
+                    where: { id_chuyen_di: id, trang_thai: 'da_don' },
+                    data: { trang_thai: 'da_tra' },
+                });
+                updatedAttendanceCount = result.count;
+            }
+            return { updatedTrip, updatedAttendanceCount };
+        });
+    }
+    /**
+     * Lấy danh sách ID phụ huynh có con trong chuyến đi
+     * @param id_chuyen_di - ID của chuyến đi
+     * @returns Mảng các ID phụ huynh
+     */
+    async getParentIdsByTripId(id_chuyen_di) {
+        const attendances = await client_1.default.diem_danh_chuyen_di.findMany({
+            where: { id_chuyen_di },
+            include: {
+                hoc_sinh: {
+                    select: {
+                        id_phu_huynh: true // Đúng tên trường trong schema
+                    }
+                }
+            }
+        });
+        // Lọc và loại bỏ duplicate
+        const parentIds = attendances
+            .map(att => att.hoc_sinh?.id_phu_huynh)
+            .filter((id) => id !== null && id !== undefined);
+        return [...new Set(parentIds)]; // Remove duplicates
+    }
+}
+exports.ChuyenDiRepository = ChuyenDiRepository;
+//# sourceMappingURL=ChuyenDiRepo.js.map

@@ -1,8 +1,16 @@
 import prisma from '../prisma/client';
 
 export class DiemDungRepo {
-  async getAll() {
+  async getAll(q?: string) {
+    const where: any = {};
+    if (q && q.trim()) {
+      where.OR = [
+        { ten_diem_dung: { contains: q.trim(), mode: 'insensitive' } as any },
+        { dia_chi: { contains: q.trim(), mode: 'insensitive' } as any },
+      ];
+    }
     const data = await prisma.diem_dung.findMany({
+      where,
       select: {
         id_diem_dung: true,
         ten_diem_dung: true,
@@ -41,6 +49,30 @@ export class DiemDungRepo {
     }));
 
     return mapped as Array<{ id_diem_dung: number; so_luong_hoc_sinh_con: number }>;
+  }
+
+  async create(data: { ten_diem_dung: string; dia_chi?: string | null; vi_do: number; kinh_do: number }) {
+    return await prisma.diem_dung.create({
+      data: {
+        ten_diem_dung: data.ten_diem_dung,
+        dia_chi: data.dia_chi ?? null,
+        vi_do: new (require('@prisma/client').Prisma.Decimal)(data.vi_do),
+        kinh_do: new (require('@prisma/client').Prisma.Decimal)(data.kinh_do),
+      },
+    });
+  }
+
+  async update(id: number, data: Partial<{ ten_diem_dung: string; dia_chi: string | null; vi_do: number; kinh_do: number }>) {
+    const payload: any = {};
+    if (data.ten_diem_dung !== undefined) payload.ten_diem_dung = data.ten_diem_dung;
+    if (data.dia_chi !== undefined) payload.dia_chi = data.dia_chi;
+    if (data.vi_do !== undefined) payload.vi_do = new (require('@prisma/client').Prisma.Decimal)(data.vi_do);
+    if (data.kinh_do !== undefined) payload.kinh_do = new (require('@prisma/client').Prisma.Decimal)(data.kinh_do);
+    return await prisma.diem_dung.update({ where: { id_diem_dung: id }, data: payload });
+  }
+
+  async delete(id: number) {
+    return await prisma.diem_dung.delete({ where: { id_diem_dung: id } });
   }
 }
 

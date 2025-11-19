@@ -4,6 +4,7 @@ import prisma from "../prisma/client";
 export class NguoiDungRepository {
     async getAllNguoiDung() {
         return await prisma.nguoi_dung.findMany({
+            where: { isDelete: false },
             select: {
                 id_nguoi_dung: true,
                 ho_ten: true,
@@ -20,8 +21,8 @@ export class NguoiDungRepository {
     }
 
     async getNguoiDungById(id: number) {
-        return await prisma.nguoi_dung.findUnique({
-            where: { id_nguoi_dung: id },
+        return await prisma.nguoi_dung.findFirst({
+            where: { id_nguoi_dung: id, isDelete: false },
             select: {
                 id_nguoi_dung: true,
                 ho_ten: true,
@@ -37,7 +38,7 @@ export class NguoiDungRepository {
         try {
             console.debug('[NguoiDungRepo] getNguoiDungByVaiTro request:', { vaiTro });
             const results = await prisma.nguoi_dung.findMany({
-                where: { vai_tro: vaiTro },
+                where: { vai_tro: vaiTro, isDelete: false },
                 select: {
                     id_nguoi_dung: true,
                     ho_ten: true,

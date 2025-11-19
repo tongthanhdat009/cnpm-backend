@@ -1,0 +1,299 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TuyenDuongRepo = void 0;
+const client_1 = __importDefault(require("../prisma/client"));
+class TuyenDuongRepo {
+    async getAll() {
+        const today = new Date();
+        const data = await client_1.default.tuyen_duong.findMany({
+            where: {
+                isDelete: false, // ✅ chỉ lấy tuyến chưa bị xóa
+            },
+            select: {
+                id_tuyen_duong: true,
+                ten_tuyen_duong: true,
+                quang_duong: true,
+                thoi_gian_du_kien: true,
+                mo_ta: true,
+                tuyen_duong_diem_dung: {
+                    select: {
+                        thu_tu_diem_dung: true,
+                        id_diem_dung: true,
+                    },
+                },
+                phan_cong_hoc_sinh: {
+                    select: {
+                        id_hoc_sinh: true,
+                    },
+                },
+                // ✅ chỉ đếm số chuyến đi có ngày < hôm nay
+                _count: {
+                    select: {
+                        chuyen_di: {
+                            where: {
+                                trang_thai: { not: 'cho_khoi_hanh' },
+                            },
+                        },
+                    },
+                },
+            },
+        });
+        const result = data.map(td => ({
+            ...td,
+            phan_cong_hoc_sinh: td.phan_cong_hoc_sinh.map(pc => pc.id_hoc_sinh),
+            // ✅ Nếu có ít nhất 1 chuyến trước hôm nay => true
+            is_use: td._count.chuyen_di > 0,
+        }));
+        return result;
+    }
+    async checkNameExists(ten_tuyen_duong) {
+        const count = await client_1.default.tuyen_duong.count({
+            where: { ten_tuyen_duong },
+        });
+        return count > 0;
+    }
+    async create(data) {
+        // Map input so_thu_tu -> thu_tu_diem_dung for DB
+        const diemDungCreates = data.tuyen_duong_diem_dung.map((d) => ({
+            thu_tu_diem_dung: d.so_thu_tu,
+            id_diem_dung: d.id_diem_dung,
+        }));
+        const created = await client_1.default.tuyen_duong.create({
+            data: {
+                ten_tuyen_duong: data.ten_tuyen_duong,
+                quang_duong: data.quang_duong,
+                thoi_gian_du_kien: data.thoi_gian_du_kien ?? null,
+                mo_ta: data.mo_ta ?? null,
+                tuyen_duong_diem_dung: {
+                    create: diemDungCreates,
+                },
+            },
+            include: {
+                tuyen_duong_diem_dung: true,
+            },
+        });
+        // Chuẩn hóa output: đổi về key frontend quen dùng
+        return {
+            id_tuyen_duong: created.id_tuyen_duong,
+            ten_tuyen_duong: created.ten_tuyen_duong,
+            quang_duong: created.quang_duong,
+            thoi_gian_du_kien: created.thoi_gian_du_kien,
+            mo_ta: created.mo_ta,
+            tuyen_duong_diem_dung: created.tuyen_duong_diem_dung
+                .sort((a, b) => a.thu_tu_diem_dung - b.thu_tu_diem_dung)
+                .map((d) => ({
+                so_thu_tu: d.thu_tu_diem_dung,
+                id_diem_dung: d.id_diem_dung,
+            })),
+        };
+    }
+    async getTuyenDuongById(id) {
+        return await client_1.default.tuyen_duong.findUnique({
+            where: { id_tuyen_duong: id },
+            include: {
+                tuyen_duong_diem_dung: {
+                    include: {
+                        diem_dung: true,
+                    },
+                },
+            },
+        });
+    }
+    async update(data) {
+        const id = data.id_tuyen_duong;
+        return await client_1.default.$transaction(async (tx) => {
+            const tuyen = await tx.tuyen_duong.findUnique({ where: { id_tuyen_duong: id } });
+            if (!tuyen)
+                return { type: 'not_found' };
+            // Update core fields
+            await tx.tuyen_duong.update({
+                where: { id_tuyen_duong: id },
+                data: {
+                    ten_tuyen_duong: data.ten_tuyen_duong ?? tuyen.ten_tuyen_duong,
+                    quang_duong: data.quang_duong ?? tuyen.quang_duong,
+                    thoi_gian_du_kien: data.thoi_gian_du_kien ?? tuyen.thoi_gian_du_kien,
+                    mo_ta: data.mo_ta ?? tuyen.mo_ta,
+                },
+            });
+            // If diem_dung_ids provided, replace stops
+            if (Array.isArray(data.diem_dung_ids)) {
+                // Determine which stops are being removed so we can clean up student assignments
+                const existingStops = await tx.tuyen_duong_diem_dung.findMany({
+                    where: { id_tuyen_duong: id },
+                    select: { id_diem_dung: true },
+                });
+                const existingIds = existingStops.map(s => s.id_diem_dung).filter((v) => v != null);
+                const newIds = data.diem_dung_ids || [];
+                const removedIds = existingIds.filter(eid => !newIds.includes(eid));
+                if (removedIds.length > 0) {
+                    // Find students who belong to removed stations
+                    const students = await tx.hoc_sinh.findMany({
+                        where: { id_diem_dung: { in: removedIds } },
+                        select: { id_hoc_sinh: true },
+                    });
+                    const studentIds = students.map(s => s.id_hoc_sinh).filter((v) => v != null);
+                    if (studentIds.length > 0) {
+                        // Delete assignments of those students for this route
+                        await tx.phan_cong_hoc_sinh.deleteMany({
+                            where: { id_tuyen_duong: id, id_hoc_sinh: { in: studentIds } },
+                        });
+                        // Also delete attendance records (diem_danh_chuyen_di) for those students
+                        // on trips that belong to this route and are still 'cho_khoi_hanh' (not started)
+                        const trips = await tx.chuyen_di.findMany({
+                            where: { id_tuyen_duong: id, trang_thai: 'cho_khoi_hanh' },
+                            select: { id_chuyen_di: true },
+                        });
+                        const tripIds = trips.map(t => t.id_chuyen_di).filter((v) => v != null);
+                        if (tripIds.length > 0) {
+                            await tx.diem_danh_chuyen_di.deleteMany({
+                                where: {
+                                    id_hoc_sinh: { in: studentIds },
+                                    id_chuyen_di: { in: tripIds },
+                                },
+                            });
+                        }
+                    }
+                }
+                // remove existing stops
+                await tx.tuyen_duong_diem_dung.deleteMany({ where: { id_tuyen_duong: id } });
+                if (data.diem_dung_ids.length > 0) {
+                    const creates = data.diem_dung_ids.map((id_diem, idx) => ({
+                        id_tuyen_duong: id,
+                        id_diem_dung: id_diem,
+                        thu_tu_diem_dung: idx + 1,
+                    }));
+                    // createMany for performance
+                    await tx.tuyen_duong_diem_dung.createMany({ data: creates });
+                }
+            }
+            const updated = await tx.tuyen_duong.findUnique({
+                where: { id_tuyen_duong: id },
+                include: { tuyen_duong_diem_dung: true },
+            });
+            return { type: 'updated', record: updated };
+        });
+    }
+    // Kiểm tra xem tuyến đường đã được tham chiếu bởi ít nhất 1 chuyen_di hay chưa
+    async isTuyenDuongUsed(id_tuyen_duong) {
+        const count = await client_1.default.chuyen_di.count({
+            where: { id_tuyen_duong, trang_thai: { not: 'cho_khoi_hanh' } },
+        });
+        return count > 0;
+    }
+    /**
+     * Xóa tuyến đường theo rule:
+     * - Xóa tất cả chuyen_di với trang_thai = 'cho_khoi_hanh' (chưa khởi hành)
+     * - Nếu tuyến đã được sử dụng (isTuyenDuongUsed == true) => soft delete: set isDelete = true và thêm dấu '*' vào tên (nếu chưa có)
+     * - Nếu chưa được sử dụng => hard delete (xóa record tuyen_duong)
+     * Trả về thông tin tóm tắt
+     */
+    async deleteTuyenDuong(id_tuyen_duong) {
+        // 1) Xóa các chuyến chưa khởi hành
+        const deletedTrips = await client_1.default.chuyen_di.deleteMany({
+            where: { id_tuyen_duong, trang_thai: 'cho_khoi_hanh' },
+        });
+        // 2) Kiểm tra xem tuyến có được sử dụng (còn chuyến với trạng thái khác 'cho_khoi_hanh')
+        const used = await this.isTuyenDuongUsed(id_tuyen_duong);
+        if (used) {
+            // Soft delete: set isDelete = true and append '*' to name if not already
+            const tuyen = await client_1.default.tuyen_duong.findUnique({ where: { id_tuyen_duong } });
+            if (!tuyen) {
+                return { type: 'not_found', deletedTrips: deletedTrips.count };
+            }
+            let newName = tuyen.ten_tuyen_duong;
+            if (!newName.endsWith('*'))
+                newName = `${newName}*`;
+            await client_1.default.tuyen_duong.update({
+                where: { id_tuyen_duong },
+                data: { isDelete: true, ten_tuyen_duong: newName },
+            });
+            return { type: 'soft', deletedTrips: deletedTrips.count };
+        }
+        // Not used => hard delete the route (this will cascade to related records if DB configured)
+        await client_1.default.tuyen_duong.delete({ where: { id_tuyen_duong } });
+        return { type: 'hard', deletedTrips: deletedTrips.count };
+    }
+    // Thêm học sinh vào tuyến đường (tạo bản ghi phan_cong_hoc_sinh)
+    async assignHocSinhToTuyen(id_tuyen_duong, id_hoc_sinh) {
+        // Kiểm tra tồn tại
+        const tuyen = await client_1.default.tuyen_duong.findUnique({ where: { id_tuyen_duong } });
+        if (!tuyen)
+            return { type: 'not_found_tuyen' };
+        const hs = await client_1.default.hoc_sinh.findUnique({ where: { id_hoc_sinh } });
+        if (!hs)
+            return { type: 'not_found_hoc_sinh' };
+        // Tránh trùng
+        const existed = await client_1.default.phan_cong_hoc_sinh.findFirst({ where: { id_tuyen_duong, id_hoc_sinh } });
+        if (existed)
+            return { type: 'existed' };
+        const created = await client_1.default.phan_cong_hoc_sinh.create({
+            data: { id_tuyen_duong, id_hoc_sinh },
+        });
+        // Sau khi phân công, tạo bản ghi điểm danh cho tất cả chuyến đi của tuyến (trừ chuyến đã hoàn thành)
+        // Sử dụng id_diem_dung của học sinh; nếu học sinh chưa có điểm dừng, bỏ qua bước điểm danh
+        if (hs.id_diem_dung != null) {
+            const trips = await client_1.default.chuyen_di.findMany({
+                where: { id_tuyen_duong, trang_thai: 'cho_khoi_hanh' },
+                select: { id_chuyen_di: true },
+            });
+            console.log("Trips to create attendance for:", trips);
+            const now = new Date();
+            for (const trip of trips) {
+                // Tránh trùng lặp nếu đã tồn tại bản ghi điểm danh
+                const existedAttendance = await client_1.default.diem_danh_chuyen_di.findFirst({
+                    where: {
+                        id_chuyen_di: trip.id_chuyen_di,
+                        id_hoc_sinh: id_hoc_sinh,
+                    },
+                });
+                if (!existedAttendance) {
+                    await client_1.default.diem_danh_chuyen_di.create({
+                        data: {
+                            id_chuyen_di: trip.id_chuyen_di,
+                            id_hoc_sinh: id_hoc_sinh,
+                            id_diem_dung: hs.id_diem_dung,
+                            // Giả định trạng thái khởi tạo là 'vang_mat' như trạng thái chờ, có thể đổi nếu bạn muốn
+                            trang_thai: 'chua_don',
+                            thoi_gian: now,
+                        },
+                    });
+                }
+            }
+        }
+        return { type: 'created', record: created };
+    }
+    // Xóa học sinh khỏi tuyến đường (xóa bản ghi phan_cong_hoc_sinh)
+    async removeHocSinhFromTuyen(id_tuyen_duong, id_hoc_sinh) {
+        const outcome = await client_1.default.$transaction(async (tx) => {
+            // Lấy danh sách chuyến đi chưa hoàn thành của tuyến
+            const trips = await tx.chuyen_di.findMany({
+                where: { id_tuyen_duong, trang_thai: 'cho_khoi_hanh' },
+                select: { id_chuyen_di: true },
+            });
+            const tripIds = trips.map(t => t.id_chuyen_di);
+            let deletedAttendance = 0;
+            if (tripIds.length > 0) {
+                const delAtt = await tx.diem_danh_chuyen_di.deleteMany({
+                    where: {
+                        id_hoc_sinh,
+                        id_chuyen_di: { in: tripIds },
+                    },
+                });
+                deletedAttendance = delAtt.count;
+            }
+            const delAssign = await tx.phan_cong_hoc_sinh.deleteMany({
+                where: { id_tuyen_duong, id_hoc_sinh },
+            });
+            if (delAssign.count === 0) {
+                return { type: 'not_found', deletedAttendance };
+            }
+            return { type: 'deleted', deletedCount: delAssign.count, deletedAttendance };
+        });
+        return outcome;
+    }
+}
+exports.TuyenDuongRepo = TuyenDuongRepo;
+//# sourceMappingURL=TuyenDuongRepo.js.map

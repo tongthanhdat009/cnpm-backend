@@ -4,6 +4,8 @@ import authRepository from '../repositories/AuthRepo';
 import { NguoiDungRepository } from '../repositories/NguoiDungRepo';
 import { ChuyenDiRepository } from '../repositories/ChuyenDiRepo';
 import authService, { RegisterData } from './AuthService';
+import { formatVietnamTime } from '../utils/timezone';
+import prisma from '../prisma/client';
 
 const SALT_ROUNDS = 10;
 
@@ -40,11 +42,31 @@ export class TaiXeService {
 
   async createTaiXe(payload: Omit<RegisterData, 'vai_tro'>) {
     try {
-      // delegate to authService.register which handles validation and hashing
-      const created = await authService.register({ ...payload, vai_tro: 'tai_xe' as nguoi_dung_vai_tro });
+      // Normalize input then delegate to authService.register which handles validation and hashing
+      const ho_ten = (payload.ho_ten ?? '').trim();
+      const ten_tai_khoan = (payload.ten_tai_khoan ?? '').trim();
+      let so_dien_thoai = payload.so_dien_thoai ?? undefined;
+      if (so_dien_thoai) {
+        // Chuẩn hóa số điện thoại: bỏ ký tự không phải số, chuyển +84xxx -> 0xxx
+        const digits = so_dien_thoai.replace(/\D+/g, '');
+        if (digits.startsWith('84') && digits.length >= 11) {
+          so_dien_thoai = '0' + digits.slice(2);
+        } else {
+          so_dien_thoai = digits;
+        }
+      }
+      const created = await authService.register({
+        ho_ten,
+        ten_tai_khoan,
+        mat_khau: payload.mat_khau,
+        so_dien_thoai,
+        vai_tro: 'tai_xe' as nguoi_dung_vai_tro
+      });
       return { success: true, message: 'Tạo tài xế thành công', data: created };
     } catch (err: any) {
-      return { success: false, message: 'Lỗi khi tạo tài xế', error: err.message };
+      console.error('[TaiXeService] createTaiXe error:', err?.message ?? err);
+      // Surface underlying validation/business message to client
+      return { success: false, message: err?.message || 'Lỗi khi tạo tài xế', error: err?.message };
     }
   }
 
@@ -126,15 +148,19 @@ export class TaiXeService {
     try {
       console.debug('[TaiXeService] deleteTaiXe id =>', id, 'replaceWithId =>', replaceWithId);
 
-      // Check whether driver has any trips
+      // Check whether driver has any FUTURE or TODAY trips (VN time)
       const trips = await this.chuyenDiRepo.getChuyenDiByTaiXe(id);
-      if (trips && trips.length > 0) {
+      const todayVN = formatVietnamTime(new Date(), 'date'); // YYYY-MM-DD in VN
+      const isOnOrAfterToday = (d: Date) => formatVietnamTime(d, 'date') >= todayVN;
+      const futureOrTodayTrips = (trips || []).filter((t: any) => isOnOrAfterToday(t.ngay));
+
+  if (futureOrTodayTrips.length > 0) {
         // If no replacement provided, return trips and instruct client to provide replacement
         if (!replaceWithId) {
           return {
             success: false,
-            message: 'Tài xế đang có lịch trình. Vui lòng chỉ định tài xế thay thế trước khi xóa.',
-            data: trips,
+            message: 'Tài xế đang có lịch trình từ hôm nay trở đi. Vui lòng chỉ định tài xế thay thế trước khi xóa.',
+            data: futureOrTodayTrips,
             code: 'HAS_TRIPS'
           };
         }
@@ -153,18 +179,21 @@ export class TaiXeService {
 
         // Check schedule conflicts: replacement must not have trips that conflict
         // Rule: conflict if same date (ngay) and same gio_khoi_hanh
-        const replacementTrips = await this.chuyenDiRepo.getChuyenDiByTaiXe(replaceWithId);
+        const replacementTripsAll = await this.chuyenDiRepo.getChuyenDiByTaiXe(replaceWithId);
+        const replacementTrips = (replacementTripsAll || []).filter((t: any) => isOnOrAfterToday(t.ngay));
         const conflicts: any[] = [];
-        // Build quick index for replacement trips by ngay + gio_khoi_hanh
+        // Build quick index for replacement trips by ngay + gio_khoi_hanh in VN date and UTC time parts
+        const pad2 = (n: number) => n.toString().padStart(2, '0');
+        const timeKey = (dateTime: Date) => `${pad2(dateTime.getUTCHours())}:${pad2(dateTime.getUTCMinutes())}:${pad2(dateTime.getUTCSeconds())}`;
         const repIndex = new Map<string, any[]>();
         for (const rt of replacementTrips) {
-          const key = `${new Date(rt.ngay).toDateString()}|${rt.gio_khoi_hanh}`;
+          const key = `${formatVietnamTime(rt.ngay, 'date')}|${timeKey(rt.gio_khoi_hanh as any)}`;
           const arr = repIndex.get(key) || [];
           arr.push(rt);
           repIndex.set(key, arr);
         }
-        for (const t of trips) {
-          const key = `${new Date(t.ngay).toDateString()}|${t.gio_khoi_hanh}`;
+        for (const t of futureOrTodayTrips) {
+          const key = `${formatVietnamTime(t.ngay, 'date')}|${timeKey(t.gio_khoi_hanh as any)}`;
           const matched = repIndex.get(key);
           if (matched && matched.length > 0) {
             conflicts.push({ reassignTrip: t, with: matched });
@@ -175,30 +204,38 @@ export class TaiXeService {
             success: false,
             message: 'Tài xế thay thế đang có lịch trùng. Vui lòng chọn tài xế khác.',
             code: 'REPLACE_CONFLICT',
-            data: { conflicts, trips }
+            data: { conflicts, trips: futureOrTodayTrips }
           };
         }
 
-        // Reassign trips
-        const reassignResult = await this.chuyenDiRepo.reassignChuyenDiTaiXe(id, replaceWithId);
-        console.debug('[TaiXeService] reassignChuyenDiTaiXe result =>', reassignResult);
+        // Reassign ONLY future/today trips
+        for (const trip of futureOrTodayTrips) {
+          await prisma.chuyen_di.update({
+            where: { id_chuyen_di: trip.id_chuyen_di },
+            data: { id_tai_xe: replaceWithId }
+          });
+        }
+        console.debug('[TaiXeService] reassignChuyenDiTaiXe (future only) count =>', futureOrTodayTrips.length);
       }
 
-      // Safe to delete (either had no trips, or reassign completed)
-      await authRepository.deleteUser(id);
-      console.debug('[TaiXeService] deleteTaiXe deleted id =>', id);
-      return { success: true, message: 'Xóa tài xế thành công' };
+      // Soft delete: mark user isDelete = true instead of removing references
+      const updated = await prisma.nguoi_dung.update({
+        where: { id_nguoi_dung: id },
+        data: { isDelete: true }
+      });
+      console.debug('[TaiXeService] soft-deleted driver id =>', id);
+      return { success: true, message: 'Xóa mềm tài xế thành công', data: { id, ho_ten: updated.ho_ten } };
     } catch (err: any) {
       console.error('[TaiXeService] deleteTaiXe error:', err?.message ?? err, err?.code ?? 'no-code');
       const code = err?.code ?? null;
       if (code === 'P2025') {
-        return { success: false, message: 'Tài xế không tồn tại', error: err.message, code };
+        return { success: false, message: 'Tài xế không tồn tại hoặc đã bị xóa', error: err.message, code };
       }
       if (code === 'P2003') {
         // foreign key constraint failed — referenced elsewhere
-        return { success: false, message: 'Không thể xóa tài xế vì bị tham chiếu bởi dữ liệu khác', error: err.message, code };
+        return { success: false, message: 'Không thể xóa mềm tài xế vì bị tham chiếu lỗi FK', error: err.message, code };
       }
-      return { success: false, message: 'Lỗi khi xóa tài xế', error: err.message, code };
+      return { success: false, message: 'Lỗi khi xóa mềm tài xế', error: err.message, code };
     }
   }
 }

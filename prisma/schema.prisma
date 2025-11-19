@@ -79,6 +79,7 @@ model nguoi_dung {
   so_dien_thoai                                 String?            @unique(map: "so_dien_thoai") @db.VarChar(20)
   vai_tro                                       nguoi_dung_vai_tro
   ngay_tao                                      DateTime           @default(now()) @db.Timestamp(0)
+  isDelete                                      Boolean            @default(false)
   chuyen_di                                     chuyen_di[]
   hoc_sinh                                      hoc_sinh[]
   thong_bao_thong_bao_id_nguoi_guiTonguoi_dung  thong_bao[]        @relation("thong_bao_id_nguoi_guiTonguoi_dung")

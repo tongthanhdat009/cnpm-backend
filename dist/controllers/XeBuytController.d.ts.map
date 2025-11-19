@@ -1,0 +1,1 @@
+{"version":3,"file":"XeBuytController.d.ts","sourceRoot":"","sources":["../../src/controllers/XeBuytController.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,OAAO,EAAE,QAAQ,EAAE,MAAM,SAAS,CAAC;AAC5C,qBAAa,gBAAgB;IACzB,OAAO,CAAC,OAAO,CAAgB;;IAIzB,YAAY,CAAC,GAAG,EAAE,OAAO,EAAE,GAAG,EAAE,QAAQ;IASxC,aAAa,CAAC,GAAG,EAAE,OAAO,EAAE,GAAG,EAAE,QAAQ;CAoBlD;;AACD,wBAAsC"}
