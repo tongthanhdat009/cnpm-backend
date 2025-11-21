@@ -1,21 +1,38 @@
 import HocSinhRepo from '../repositories/HocSinhRepo';
 
-export class HocSinhService {
+class HocSinhService {
   private repo = HocSinhRepo;
 
   async getAll() {
-    const data = await this.repo.getAll();
-    return data;
+    return await this.repo.getAll();
   }
 
   async getById(id: number) {
-    const data = await this.repo.getById(id);
-    return data;
+    return await this.repo.getById(id);
   }
 
   async getByPhuHuynh(idPhuHuynh: number) {
-    const data = await this.repo.getByPhuHuynh(idPhuHuynh);
-    return data;
+    return await this.repo.getByPhuHuynh(idPhuHuynh);
+  }
+
+  async create(data: any) {
+    return await this.repo.create(data);
+  }
+
+  async update(id: number, data: any) {
+    const existing = await this.repo.getById(id);
+    if (!existing) {
+      throw new Error('Học sinh không tồn tại');
+    }
+    return await this.repo.update(id, data);
+  }
+
+  async delete(id: number) {
+    const existing = await this.repo.getById(id);
+    if (!existing) {
+      throw new Error('Học sinh không tồn tại');
+    }
+    return await this.repo.delete(id);
   }
 }
 
