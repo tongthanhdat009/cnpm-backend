@@ -4,7 +4,7 @@ import prisma from "../prisma/client";
 export class NguoiDungRepository {
     async getAllNguoiDung() {
         return await prisma.nguoi_dung.findMany({
-            where: { isDelete: false },
+            where: { },
             select: {
                 id_nguoi_dung: true,
                 ho_ten: true,
@@ -12,6 +12,7 @@ export class NguoiDungRepository {
                 so_dien_thoai: true,
                 vai_tro: true,
                 ngay_tao: true,
+                isDelete: true,
                 // Không select mat_khau_bam để bảo mật
             },
             orderBy: {
@@ -22,7 +23,7 @@ export class NguoiDungRepository {
 
     async getNguoiDungById(id: number) {
         return await prisma.nguoi_dung.findFirst({
-            where: { id_nguoi_dung: id, isDelete: false },
+            where: { id_nguoi_dung: id },
             select: {
                 id_nguoi_dung: true,
                 ho_ten: true,
@@ -30,6 +31,7 @@ export class NguoiDungRepository {
                 so_dien_thoai: true,
                 vai_tro: true,
                 ngay_tao: true,
+                isDelete: true,
                 // Không select mat_khau_bam để bảo mật
             }
         });
@@ -38,7 +40,7 @@ export class NguoiDungRepository {
         try {
             console.debug('[NguoiDungRepo] getNguoiDungByVaiTro request:', { vaiTro });
             const results = await prisma.nguoi_dung.findMany({
-                where: { vai_tro: vaiTro, isDelete: false },
+                where: { vai_tro: vaiTro },
                 select: {
                     id_nguoi_dung: true,
                     ho_ten: true,
@@ -46,6 +48,7 @@ export class NguoiDungRepository {
                     so_dien_thoai: true,
                     vai_tro: true,
                     ngay_tao: true,
+                    isDelete: true,
                 }
             });
             console.debug('[NguoiDungRepo] getNguoiDungByVaiTro resultCount:', results?.length ?? 0);

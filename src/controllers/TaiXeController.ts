@@ -79,6 +79,23 @@ export class TaiXeController {
       return res.status(500).json({ success: false, message: 'Lỗi server khi xóa tài xế', error: err?.message });
     }
   }
+
+  async restore(req: Request, res: Response) {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ success: false, message: 'Thiếu tham số id' });
+    const idNumber = parseInt(id, 10);
+    if (Number.isNaN(idNumber)) return res.status(400).json({ success: false, message: 'id không hợp lệ' });
+
+    try {
+      console.debug('[TaiXeController] restore incoming id =>', idNumber);
+      const result = await this.service.restoreTaiXe(idNumber);
+      if (result.success) return res.status(200).json(result);
+      return res.status(400).json(result);
+    } catch (err: any) {
+      console.error('[TaiXeController] restore unexpected error:', err?.message ?? err);
+      return res.status(500).json({ success: false, message: 'Lỗi server khi phục hồi tài xế', error: err?.message });
+    }
+  }
 }
 
 export default new TaiXeController();

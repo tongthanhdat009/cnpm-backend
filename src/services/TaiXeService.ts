@@ -173,36 +173,44 @@ export class TaiXeService {
         if (!replacement) {
           return { success: false, message: 'Tài xế thay thế không tồn tại' };
         }
+        if (replacement.isDelete) {
+          return { success: false, message: 'Tài xế thay thế đã ngừng hoạt động' };
+        }
         if (replacement.vai_tro !== 'tai_xe') {
           return { success: false, message: 'Người được chọn không phải là tài xế' };
         }
 
         // Check schedule conflicts: replacement must not have trips that conflict
-        // Rule: conflict if same date (ngay) and same gio_khoi_hanh
+        // Rule: conflict if same date (ngay) and start time difference < 30 minutes
         const replacementTripsAll = await this.chuyenDiRepo.getChuyenDiByTaiXe(replaceWithId);
         const replacementTrips = (replacementTripsAll || []).filter((t: any) => isOnOrAfterToday(t.ngay));
         const conflicts: any[] = [];
-        // Build quick index for replacement trips by ngay + gio_khoi_hanh in VN date and UTC time parts
-        const pad2 = (n: number) => n.toString().padStart(2, '0');
-        const timeKey = (dateTime: Date) => `${pad2(dateTime.getUTCHours())}:${pad2(dateTime.getUTCMinutes())}:${pad2(dateTime.getUTCSeconds())}`;
-        const repIndex = new Map<string, any[]>();
-        for (const rt of replacementTrips) {
-          const key = `${formatVietnamTime(rt.ngay, 'date')}|${timeKey(rt.gio_khoi_hanh as any)}`;
-          const arr = repIndex.get(key) || [];
-          arr.push(rt);
-          repIndex.set(key, arr);
-        }
+        
+        const getMinutes = (d: Date) => {
+            const dateObj = new Date(d);
+            return dateObj.getUTCHours() * 60 + dateObj.getUTCMinutes();
+        };
+
         for (const t of futureOrTodayTrips) {
-          const key = `${formatVietnamTime(t.ngay, 'date')}|${timeKey(t.gio_khoi_hanh as any)}`;
-          const matched = repIndex.get(key);
-          if (matched && matched.length > 0) {
+          const tDate = formatVietnamTime(t.ngay, 'date');
+          const tMinutes = getMinutes(t.gio_khoi_hanh);
+
+          const matched = replacementTrips.filter((rt: any) => {
+            const rtDate = formatVietnamTime(rt.ngay, 'date');
+            if (rtDate !== tDate) return false;
+            
+            const rtMinutes = getMinutes(rt.gio_khoi_hanh);
+            return Math.abs(tMinutes - rtMinutes) < 30;
+          });
+
+          if (matched.length > 0) {
             conflicts.push({ reassignTrip: t, with: matched });
           }
         }
         if (conflicts.length > 0) {
           return {
             success: false,
-            message: 'Tài xế thay thế đang có lịch trùng. Vui lòng chọn tài xế khác.',
+            message: 'Tài xế thay thế đang có lịch trình trùng hoặc quá sát (dưới 30 phút). Vui lòng chọn tài xế khác.',
             code: 'REPLACE_CONFLICT',
             data: { conflicts, trips: futureOrTodayTrips }
           };
@@ -236,6 +244,24 @@ export class TaiXeService {
         return { success: false, message: 'Không thể xóa mềm tài xế vì bị tham chiếu lỗi FK', error: err.message, code };
       }
       return { success: false, message: 'Lỗi khi xóa mềm tài xế', error: err.message, code };
+    }
+  }
+
+  async restoreTaiXe(id: number) {
+    try {
+      const user = await this.nguoiDungRepo.getNguoiDungById(id);
+      if (!user) return { success: false, message: 'Tài xế không tồn tại' };
+      
+      // Restore: mark user isDelete = false
+      const updated = await prisma.nguoi_dung.update({
+        where: { id_nguoi_dung: id },
+        data: { isDelete: false }
+      });
+      console.debug('[TaiXeService] restored driver id =>', id);
+      return { success: true, message: 'Phục hồi tài xế thành công', data: { id, ho_ten: updated.ho_ten } };
+    } catch (err: any) {
+      console.error('[TaiXeService] restoreTaiXe error:', err?.message ?? err);
+      return { success: false, message: 'Lỗi khi phục hồi tài xế', error: err.message };
     }
   }
 }

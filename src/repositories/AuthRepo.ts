@@ -46,6 +46,7 @@ export class AuthRepository {
         vai_tro: true,
         so_dien_thoai: true,
         ngay_tao: true,
+        isDelete: true,
       },
     });
   }
