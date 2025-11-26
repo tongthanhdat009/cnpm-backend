@@ -67,10 +67,10 @@ export class TuyenDuongService {
     }
 
     // Check if route has been used
-    const used = await this.repo.isTuyenDuongUsed(id);
-    if (used) {
-      throw new Error('Tuyến đường đã được sử dụng, không thể cập nhật');
-    }
+    // const used = await this.repo.isTuyenDuongUsed(id);
+    // if (used) {
+    //   throw new Error('Tuyến đường đã được sử dụng, không thể cập nhật');
+    // }
 
     // If changing name, ensure uniqueness
     if (data.ten_tuyen_duong) {

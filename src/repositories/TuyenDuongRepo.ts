@@ -127,82 +127,175 @@ async getAll() {
       const tuyen = await tx.tuyen_duong.findUnique({ where: { id_tuyen_duong: id } });
       if (!tuyen) return { type: 'not_found' as const };
 
-      // Update core fields
-      await tx.tuyen_duong.update({
-        where: { id_tuyen_duong: id },
-        data: {
+      // Check if route is used (has trips not in 'cho_khoi_hanh')
+      const usedCount = await tx.chuyen_di.count({
+        where: { id_tuyen_duong: id, trang_thai: { not: 'cho_khoi_hanh' } },
+      });
+      const isUsed = usedCount > 0;
+
+      // Check if critical info changed (name or stops)
+      let nameChanged = false;
+      if (data.ten_tuyen_duong && data.ten_tuyen_duong !== tuyen.ten_tuyen_duong) {
+        nameChanged = true;
+      }
+
+      let stopsChanged = false;
+      if (Array.isArray(data.diem_dung_ids)) {
+        const currentStops = await tx.tuyen_duong_diem_dung.findMany({
+          where: { id_tuyen_duong: id },
+          orderBy: { thu_tu_diem_dung: 'asc' },
+          select: { id_diem_dung: true },
+        });
+        const currentIds = currentStops.map(s => s.id_diem_dung);
+        const newIds = data.diem_dung_ids;
+        
+        if (currentIds.length !== newIds.length) {
+          stopsChanged = true;
+        } else {
+          for (let i = 0; i < currentIds.length; i++) {
+            if (currentIds[i] !== newIds[i]) {
+              stopsChanged = true;
+              break;
+            }
+          }
+        }
+      }
+
+      // If used AND critical info changed => Soft delete old, create new
+      if (isUsed && (nameChanged || stopsChanged)) {
+        // 1. Soft delete old route
+        let oldName = tuyen.ten_tuyen_duong;
+        if (!oldName.endsWith('*')) oldName = `${oldName}*`;
+        await tx.tuyen_duong.update({
+          where: { id_tuyen_duong: id },
+          data: { isDelete: true, ten_tuyen_duong: oldName },
+        });
+
+        // 2. Create new route
+        const newRouteData = {
           ten_tuyen_duong: data.ten_tuyen_duong ?? tuyen.ten_tuyen_duong,
           quang_duong: data.quang_duong ?? tuyen.quang_duong,
           thoi_gian_du_kien: data.thoi_gian_du_kien ?? tuyen.thoi_gian_du_kien,
           mo_ta: data.mo_ta ?? tuyen.mo_ta,
-        },
-      });
+        };
 
-      // If diem_dung_ids provided, replace stops
-      if (Array.isArray(data.diem_dung_ids)) {
-        // Determine which stops are being removed so we can clean up student assignments
-        const existingStops = await tx.tuyen_duong_diem_dung.findMany({
-          where: { id_tuyen_duong: id },
-          select: { id_diem_dung: true },
-        });
-        const existingIds = existingStops.map(s => s.id_diem_dung).filter((v): v is number => v != null);
-        const newIds = data.diem_dung_ids || [];
-        const removedIds = existingIds.filter(eid => !newIds.includes(eid));
-
-        if (removedIds.length > 0) {
-          // Find students who belong to removed stations
-          const students = await tx.hoc_sinh.findMany({
-            where: { id_diem_dung: { in: removedIds } },
-            select: { id_hoc_sinh: true },
+        // Prepare stops for new route
+        let newStopsData: { thu_tu_diem_dung: number; id_diem_dung: number }[] = [];
+        if (Array.isArray(data.diem_dung_ids)) {
+          newStopsData = data.diem_dung_ids.map((sid, idx) => ({
+            thu_tu_diem_dung: idx + 1,
+            id_diem_dung: sid,
+          }));
+        } else {
+          // Copy old stops if not provided (though usually provided in update)
+          const oldStops = await tx.tuyen_duong_diem_dung.findMany({
+            where: { id_tuyen_duong: id },
+            orderBy: { thu_tu_diem_dung: 'asc' },
           });
-          const studentIds = students.map(s => s.id_hoc_sinh).filter((v): v is number => v != null);
+          newStopsData = oldStops.map(s => ({
+            thu_tu_diem_dung: s.thu_tu_diem_dung,
+            id_diem_dung: s.id_diem_dung!,
+          }));
+        }
 
-          if (studentIds.length > 0) {
-            // Delete assignments of those students for this route
-            await tx.phan_cong_hoc_sinh.deleteMany({
-              where: { id_tuyen_duong: id, id_hoc_sinh: { in: studentIds } },
+        const created = await tx.tuyen_duong.create({
+          data: {
+            ...newRouteData,
+            tuyen_duong_diem_dung: {
+              create: newStopsData,
+            },
+          },
+        });
+
+        const newRouteId = created.id_tuyen_duong;
+
+        if (stopsChanged) {
+          // Nếu thay đổi trạm: Xóa phân công học sinh cũ
+          await tx.phan_cong_hoc_sinh.deleteMany({
+            where: { id_tuyen_duong: id },
+          });
+
+          // Tìm các chuyến đi chưa khởi hành để xóa kèm điểm danh
+          const tripsToDelete = await tx.chuyen_di.findMany({
+            where: { id_tuyen_duong: id, trang_thai: 'cho_khoi_hanh' },
+            select: { id_chuyen_di: true },
+          });
+          
+          const tripIds = tripsToDelete.map(t => t.id_chuyen_di);
+          if (tripIds.length > 0) {
+            // Xóa điểm danh
+            await tx.diem_danh_chuyen_di.deleteMany({
+              where: { id_chuyen_di: { in: tripIds } },
             });
-
-            // Also delete attendance records (diem_danh_chuyen_di) for those students
-            // on trips that belong to this route and are still 'cho_khoi_hanh' (not started)
-            const trips = await tx.chuyen_di.findMany({
-              where: { id_tuyen_duong: id, trang_thai: 'cho_khoi_hanh' },
-              select: { id_chuyen_di: true },
+            // Xóa chuyến đi
+            await tx.chuyen_di.deleteMany({
+              where: { id_chuyen_di: { in: tripIds } },
             });
-            const tripIds = trips.map(t => t.id_chuyen_di).filter((v): v is number => v != null);
+          }
+        } else {
+          // Nếu chỉ đổi tên: Di chuyển phân công và chuyến đi sang tuyến mới
+          await tx.phan_cong_hoc_sinh.updateMany({
+            where: { id_tuyen_duong: id },
+            data: { id_tuyen_duong: newRouteId },
+          });
 
-            if (tripIds.length > 0) {
-              await tx.diem_danh_chuyen_di.deleteMany({
-                where: {
-                  id_hoc_sinh: { in: studentIds },
-                  id_chuyen_di: { in: tripIds },
-                },
-              });
-            }
+          await tx.chuyen_di.updateMany({
+            where: { id_tuyen_duong: id, trang_thai: 'cho_khoi_hanh' },
+            data: { id_tuyen_duong: newRouteId },
+          });
+        }
+
+        return { type: 'updated_new' as const, record: created, oldId: id, newId: newRouteId };
+
+      } else {
+        // Update in place (either not used, or critical info not changed)
+        
+        // Update core fields
+        await tx.tuyen_duong.update({
+          where: { id_tuyen_duong: id },
+          data: {
+            ten_tuyen_duong: data.ten_tuyen_duong ?? tuyen.ten_tuyen_duong,
+            quang_duong: data.quang_duong ?? tuyen.quang_duong,
+            thoi_gian_du_kien: data.thoi_gian_du_kien ?? tuyen.thoi_gian_du_kien,
+            mo_ta: data.mo_ta ?? tuyen.mo_ta,
+          },
+        });
+
+        // If stops changed, wipe assignments and future trips, then replace stops
+        if (stopsChanged && Array.isArray(data.diem_dung_ids)) {
+          // Wipe assignments
+          await tx.phan_cong_hoc_sinh.deleteMany({ where: { id_tuyen_duong: id } });
+
+          // Wipe future trips (and their attendance)
+          const tripsToDelete = await tx.chuyen_di.findMany({
+            where: { id_tuyen_duong: id, trang_thai: 'cho_khoi_hanh' },
+            select: { id_chuyen_di: true },
+          });
+          const tripIds = tripsToDelete.map(t => t.id_chuyen_di);
+          if (tripIds.length > 0) {
+            await tx.diem_danh_chuyen_di.deleteMany({ where: { id_chuyen_di: { in: tripIds } } });
+            await tx.chuyen_di.deleteMany({ where: { id_chuyen_di: { in: tripIds } } });
+          }
+
+          // Replace stops
+          await tx.tuyen_duong_diem_dung.deleteMany({ where: { id_tuyen_duong: id } });
+          if (data.diem_dung_ids.length > 0) {
+            const creates = data.diem_dung_ids.map((id_diem, idx) => ({
+              id_tuyen_duong: id,
+              id_diem_dung: id_diem,
+              thu_tu_diem_dung: idx + 1,
+            }));
+            await tx.tuyen_duong_diem_dung.createMany({ data: creates });
           }
         }
 
-        // remove existing stops
-        await tx.tuyen_duong_diem_dung.deleteMany({ where: { id_tuyen_duong: id } });
+        const updated = await tx.tuyen_duong.findUnique({
+          where: { id_tuyen_duong: id },
+          include: { tuyen_duong_diem_dung: true },
+        });
 
-        if (data.diem_dung_ids.length > 0) {
-          const creates = data.diem_dung_ids.map((id_diem, idx) => ({
-            id_tuyen_duong: id,
-            id_diem_dung: id_diem,
-            thu_tu_diem_dung: idx + 1,
-          }));
-
-          // createMany for performance
-          await tx.tuyen_duong_diem_dung.createMany({ data: creates });
-        }
+        return { type: 'updated' as const, record: updated };
       }
-
-      const updated = await tx.tuyen_duong.findUnique({
-        where: { id_tuyen_duong: id },
-        include: { tuyen_duong_diem_dung: true },
-      });
-
-      return { type: 'updated' as const, record: updated };
     });
   }
 
