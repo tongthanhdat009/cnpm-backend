@@ -245,6 +245,11 @@ async getAll() {
         data: { isDelete: true, ten_tuyen_duong: newName },
       });
 
+      // Xóa tất cả phân công học sinh thuộc tuyến này
+      await prisma.phan_cong_hoc_sinh.deleteMany({
+        where: { id_tuyen_duong },
+      });
+
       return { type: 'soft' as const, deletedTrips: deletedTrips.count };
     }
 
