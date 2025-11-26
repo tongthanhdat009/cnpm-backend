@@ -71,6 +71,29 @@ export class DiemDungRepo {
     return await prisma.diem_dung.update({ where: { id_diem_dung: id }, data: payload });
   }
 
+  async hasDependencies(id: number) {
+    // Kiểm tra xem trạm có đang được sử dụng trong điểm danh chuyến đi nào không
+    const countDiemDanh = await prisma.diem_danh_chuyen_di.count({
+      where: { id_diem_dung: id }
+    });
+    if (countDiemDanh > 0) return true;
+
+    // Kiểm tra xem trạm có thuộc tuyến đường nào đang có chuyến đi không
+    const countTuyenDuong = await prisma.tuyen_duong_diem_dung.count({
+      where: {
+        id_diem_dung: id,
+        tuyen_duong: {
+          chuyen_di: {
+            some: {} // Có ít nhất 1 chuyến đi sử dụng tuyến đường này
+          }
+        }
+      }
+    });
+    if (countTuyenDuong > 0) return true;
+
+    return false;
+  }
+
   async delete(id: number) {
     return await prisma.diem_dung.delete({ where: { id_diem_dung: id } });
   }

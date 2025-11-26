@@ -50,6 +50,13 @@ export class DiemDungService {
 
   async remove(id: number) {
     if (!id) return { success: false, message: 'Thiếu id điểm dừng' };
+
+    // Kiểm tra ràng buộc trước khi xóa
+    const isUsed = await this.repo.hasDependencies(id);
+    if (isUsed) {
+      return { success: false, message: 'Không thể xóa trạm này vì đã có chuyến đi liên quan (trong lịch sử hoặc hiện tại).' };
+    }
+
     await this.repo.delete(id);
     return { success: true, message: 'Xóa trạm thành công' };
   }
